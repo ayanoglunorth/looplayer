@@ -25,7 +25,7 @@ Two subtitle slots (primary / secondary) are a first-class concept, not a buried
 ## Capabilities and Constraints
 
 - Open local video files through the system file picker (Storage Access Framework); no network, no accounts.
-- Attach up to two subtitle files (SRT, WebVTT, SSA/ASS, TTML) before or during playback; each gets a language label.
+- Attach up to two subtitle files (SRT, WebVTT, SSA/ASS) before or during playback; each gets a language label.
 - Standard player functions: play/pause, seek bar, drag-to-seek, ±10 s buttons, auto-hiding controls, fullscreen with orientation following the video, a user rotation lock, fill/fit, playback speed, resume position.
 - Gesture map (confirmed): double-tap = switch subtitle language; horizontal drag = seek. Assumption: single tap toggles controls; vertical drags left/right adjust brightness/volume are out of scope for v1.
 - Assumption: the two loaded subtitles show one at a time (not stacked); a "both" mode is an open decision.
