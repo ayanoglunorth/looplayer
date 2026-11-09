@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import app.looplayer.R
@@ -38,7 +39,6 @@ import app.looplayer.ui.player.PlaybackError
 import app.looplayer.ui.player.PlayerSubtitleSheet
 import app.looplayer.ui.player.SeekReadout
 import app.looplayer.ui.player.SubtitleLine
-import app.looplayer.ui.theme.Inks
 import app.looplayer.ui.theme.LooplayerTheme
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import kotlinx.coroutines.runBlocking
@@ -131,17 +131,17 @@ class ScreenshotTest {
     fun phone_player_single_subtitle_hint() = shot("phone-player_single_subtitle_hint") {
         FakeFrame {
             Box(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.safeDrawing).padding(top = 72.dp)) {
-                HintPill(RuntimeEnvironment.getApplication().getString(R.string.only_one_subtitle))
+                HintPill(RuntimeEnvironment.getApplication().getString(R.string.only_one_subtitle), actionLabel = RuntimeEnvironment.getApplication().getString(R.string.add))
             }
             Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp)) {
-                SubtitleLine("Bunu sana daha önce de söylemiştim.", Inks.A.subtitleTint)
+                SubtitleLine("Bunu sana daha önce de söylemiştim.")
             }
         }
     }
 
     @Test @Config(qualifiers = PHONE_LAND)
     fun phone_player_error() = shot("phone-player_error") {
-        Box(Modifier.fillMaxSize().background(Color.Black)) { PlaybackError({}, Modifier.align(Alignment.Center)) }
+        Box(Modifier.fillMaxSize().background(Color.Black)) { PlaybackError(onBack = {}, onChooseAnother = {}, modifier = Modifier.fillMaxSize()) }
     }
 
     // ---- Scenes ----------------------------------------------------------------------------
@@ -193,14 +193,14 @@ class ScreenshotTest {
     @Composable
     private fun playerControls() = FakeFrame {
         Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 116.dp)) {
-            SubtitleLine("Bunu sana daha önce de söylemiştim,\nama dinlemedin.", Inks.A.subtitleTint)
+            SubtitleLine("Bunu sana daha önce de söylemiştim,\nama dinlemedin.")
         }
         Controls(
             title = "Kış Uykusu", isPlaying = true, buffering = false,
             position = { 4_100_000 }, durationMs = 11_760_000, speed = 1f, zoom = false,
             marks = mapOf(Slot.A to "TR", Slot.B to "EN"), active = Slot.A,
             onBack = {}, onPlayPause = {}, onSkip = {}, onScrub = {}, onScrubEnd = {},
-            onSpeed = {}, onZoom = {}, onSelectLanguage = {}, onOpenSubtitles = {},
+            onSpeed = {}, onZoom = {}, rotationLocked = false, onRotationLock = {}, onSelectLanguage = {}, onOpenSubtitles = {},
         )
     }
 
@@ -208,9 +208,9 @@ class ScreenshotTest {
     private fun afterSwitch() = FakeFrame {
         Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
             Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp)) {
-                SubtitleLine("I told you this before,\nbut you didn't listen.", Inks.B.subtitleTint)
+                SubtitleLine("I told you this before,\nbut you didn't listen.")
             }
-            EdgeIndexTabs(mapOf(Slot.A to "TR", Slot.B to "EN"), Slot.B, Modifier.align(Alignment.CenterEnd))
+            EdgeIndexTabs(mapOf(Slot.A to "TR", Slot.B to "EN"), Slot.B, Modifier.align(Alignment.CenterEnd), large = LocalConfiguration.current.screenWidthDp >= 840)
         }
     }
 

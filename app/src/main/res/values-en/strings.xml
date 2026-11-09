@@ -33,7 +33,7 @@
     <string name="pause">Pause</string>
     <string name="speed">Speed</string>
     <string name="switch_language">Switch subtitle language</string>
-    <string name="only_one_subtitle">No second subtitle. Add one from the Subtitles menu.</string>
+    <string name="only_one_subtitle">No second subtitle yet.</string>
     <string name="no_subtitles">No subtitles</string>
     <string name="subtitles_off">Subtitles off</string>
     <string name="playback_error">This video couldn\'t be played.</string>
@@ -41,4 +41,8 @@
     <string name="fit_picture">Fit to screen</string>
     <string name="fill_picture">Fill screen</string>
     <string name="add">Add</string>
+    <string name="lock_rotation">Lock rotation</string>
+    <string name="unlock_rotation">Unlock rotation</string>
+    <string name="playback_error_body">The file may have moved, or it uses a format this device can\'t play.</string>
+    <string name="choose_another">Choose another video</string>
 </resources>

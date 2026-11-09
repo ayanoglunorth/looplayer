@@ -65,6 +65,7 @@ import app.looplayer.data.tabMark
 import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.TimeFormat
 import app.looplayer.ui.components.SlotMark
+import app.looplayer.ui.theme.Palette
 import app.looplayer.ui.theme.TabularNumbers
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,7 +207,7 @@ fun Thumbnail(entry: VideoEntry, modifier: Modifier = Modifier) {
         val p = entry.progress
         if (p != null && entry.positionMs >= 5_000) {
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(MaterialTheme.colorScheme.primary))
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Palette.Progress))
             }
         }
     }

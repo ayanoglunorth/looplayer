@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -46,7 +47,10 @@ import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.ScreenLockRotation
+import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.Subtitles
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,6 +86,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -123,7 +128,8 @@ import app.looplayer.ui.components.EdgeIndexTabs
 import app.looplayer.ui.components.LanguageSwitch
 import app.looplayer.ui.components.SlotUi
 import app.looplayer.ui.components.SubtitleSlots
-import app.looplayer.ui.theme.Inks
+import app.looplayer.ui.theme.Inter
+import app.looplayer.ui.theme.Palette
 import app.looplayer.ui.theme.TabularNumbers
 import kotlinx.coroutines.delay
 
@@ -137,6 +143,7 @@ fun PlayerScreen(
     session: SubtitleSession,
     onPickSubtitle: (Slot) -> Unit,
     onExit: () -> Unit,
+    onChooseAnother: () -> Unit = onExit,
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -168,6 +175,8 @@ fun PlayerScreen(
     var durationMs by remember { mutableLongStateOf(session.entry.durationMs) }
     var speed by remember { mutableFloatStateOf(1f) }
     var zoom by remember { mutableStateOf(false) }
+    var rotationLocked by remember { mutableStateOf(false) }
+    var videoLandscape by remember { mutableStateOf(true) }
 
     var controlsVisible by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }  // bump to restart the hide timer
@@ -191,12 +200,8 @@ fun PlayerScreen(
             override fun onPlayerError(e: PlaybackException) { error = e }
             override fun onVideoSizeChanged(size: VideoSize) {
                 if (size.width > 0 && size.height > 0) {
-                    val landscape = size.width * size.pixelWidthHeightRatio >= size.height
-                    activity?.requestedOrientation = if (landscape) {
-                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                    } else {
-                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                    }
+                    videoLandscape = size.width * size.pixelWidthHeightRatio >= size.height
+                    if (!rotationLocked) activity?.requestedOrientation = orientationFor(videoLandscape)
                 }
             }
         }
@@ -364,7 +369,7 @@ fun PlayerScreen(
             label = "subtitle",
         ) { slot ->
             val text = if (session.visible) session.tracks[slot]?.textAt(positionMs) else null
-            SubtitleLine(text, Inks.of(slot).subtitleTint)
+            SubtitleLine(text)
         }
 
         // Thumb index on the right edge: appears with the controls or briefly after a switch.
@@ -374,7 +379,7 @@ fun PlayerScreen(
             exit = slideOutHorizontally(tween(160)) { it } + fadeOut(tween(160)),
             modifier = Modifier.align(Alignment.CenterEnd),
         ) {
-            EdgeIndexTabs(marks = marks, active = dual.active)
+            EdgeIndexTabs(marks = marks, active = dual.active, large = LocalConfiguration.current.screenWidthDp >= 840)
         }
 
         // Drag-to-seek readout.
@@ -414,6 +419,14 @@ fun PlayerScreen(
                 },
                 onSpeed = { speed = it; player.setPlaybackSpeed(it); interaction++ },
                 onZoom = { zoom = !zoom; interaction++ },
+                rotationLocked = rotationLocked,
+                onRotationLock = {
+                    rotationLocked = !rotationLocked
+                    // Locked: hold whatever way the screen faces now. Unlocked: follow the video again.
+                    activity?.requestedOrientation =
+                        if (rotationLocked) ActivityInfo.SCREEN_ORIENTATION_LOCKED else orientationFor(videoLandscape)
+                    interaction++
+                },
                 onSelectLanguage = { slot ->
                     if (slot != dual.active) {
                         session.select(slot)
@@ -440,10 +453,14 @@ fun PlayerScreen(
         ) {
             val last = remember { mutableIntStateOf(R.string.only_one_subtitle) }
             hint?.let { last.intValue = it }
-            HintPill(stringResource(last.intValue))
+            HintPill(
+                stringResource(last.intValue),
+                actionLabel = stringResource(R.string.add),
+                onAction = { hint = null; sheetOpen = true },
+            )
         }
 
-        error?.let { PlaybackError(onExit, Modifier.align(Alignment.Center)) }
+        error?.let { PlaybackError(onBack = onExit, onChooseAnother = onChooseAnother, modifier = Modifier.fillMaxSize()) }
     }
 
     if (sheetOpen) PlayerSubtitleSheet(session, onPickSubtitle, onDismiss = { sheetOpen = false })
@@ -479,16 +496,21 @@ internal fun PlayerSubtitleSheet(session: SubtitleSession, onPickSubtitle: (Slot
     }
 }
 
-/** Subtitle text: paper-white tinted by its language's ink, with a dark outline that holds on any picture. */
+/** Subtitle text: white with a dark outline that holds on any picture. */
 @Composable
-internal fun SubtitleLine(text: String?, tint: Color) {
+internal fun SubtitleLine(text: String?, tint: Color = Palette.Subtitle) {
     if (text.isNullOrBlank()) return
     BoxWithConstraints {
-        val size = if (maxWidth > 600.dp) 24.sp else 19.sp
+        val size = when {
+            maxWidth > 1000.dp -> 30.sp
+            maxWidth > 600.dp -> 24.sp
+            else -> 19.sp
+        }
         val base = TextStyle(
+            fontFamily = Inter,
             fontSize = size,
             lineHeight = size * 1.25f,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
         Box(contentAlignment = Alignment.Center) {
@@ -520,6 +542,7 @@ internal fun Controls(
     durationMs: Long,
     speed: Float,
     zoom: Boolean,
+    rotationLocked: Boolean,
     marks: Map<Slot, String>,
     active: Slot,
     onBack: () -> Unit,
@@ -529,6 +552,7 @@ internal fun Controls(
     onScrubEnd: () -> Unit,
     onSpeed: (Float) -> Unit,
     onZoom: () -> Unit,
+    onRotationLock: () -> Unit,
     onSelectLanguage: (Slot) -> Unit,
     onOpenSubtitles: () -> Unit,
 ) {
@@ -606,6 +630,13 @@ internal fun Controls(
                     }
                 }
                 Spacer(Modifier.weight(1f))
+                IconButton(onClick = onRotationLock) {
+                    Icon(
+                        if (rotationLocked) Icons.Rounded.ScreenLockRotation else Icons.Rounded.ScreenRotation,
+                        contentDescription = stringResource(if (rotationLocked) R.string.unlock_rotation else R.string.lock_rotation),
+                        tint = Color.White,
+                    )
+                }
                 IconButton(onClick = onZoom) {
                     Icon(
                         if (zoom) Icons.Rounded.FitScreen else Icons.Rounded.ZoomOutMap,
@@ -652,13 +683,31 @@ private fun speedLabel(s: Float): String =
     (if (s % 1f == 0f) s.toInt().toString() else s.toString().trimEnd('0')) + "×"
 
 @Composable
-internal fun PlaybackError(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(stringResource(R.string.playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
-        Spacer(Modifier.height(16.dp))
-        FilledTonalButton(onClick = onBack) { Text(stringResource(R.string.back)) }
+internal fun PlaybackError(onBack: () -> Unit, onChooseAnother: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier.background(Palette.Ground).windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
+        Column(Modifier.widthIn(max = 420.dp).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                stringResource(R.string.playback_error),
+                style = MaterialTheme.typography.titleLarge,
+                color = Palette.Text,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.playback_error_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Palette.Muted,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+            Button(onClick = onChooseAnother) { Text(stringResource(R.string.choose_another)) }
+            TextButton(onClick = onBack) { Text(stringResource(R.string.back), color = Palette.Muted) }
+        }
     }
 }
+
+private fun orientationFor(landscape: Boolean) =
+    if (landscape) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
 
 private fun Context.findActivity(): Activity? {
     var c = this
@@ -675,7 +724,7 @@ internal fun SeekReadout(targetMs: Long, fromMs: Long, durationMs: Long, modifie
     Column(
         modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xCC0F0E0D))
+            .background(Palette.Surface.copy(alpha = 0.88f))
             .padding(horizontal = 24.dp, vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -694,17 +743,22 @@ internal fun SeekReadout(targetMs: Long, fromMs: Long, durationMs: Long, modifie
 
 /** A short notice over the picture, e.g. when a double-tap has no second language to flip to. */
 @Composable
-internal fun HintPill(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.inverseOnSurface,
-        modifier = modifier
-            .widthIn(max = 420.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.inverseSurface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-    )
+internal fun HintPill(text: String, modifier: Modifier = Modifier, actionLabel: String? = null, onAction: () -> Unit = {}) {
+    // Dark like the seek readout: a notice over a film must never be the brightest thing on screen.
+    Row(
+        modifier
+            .widthIn(max = 480.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Palette.Surface.copy(alpha = 0.88f))
+            .heightIn(min = 48.dp)
+            .padding(start = 16.dp, end = if (actionLabel != null) 4.dp else 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = Palette.Text, modifier = Modifier.weight(1f, fill = false))
+        if (actionLabel != null) {
+            TextButton(onClick = onAction) { Text(actionLabel, color = Palette.Text, fontWeight = FontWeight.SemiBold) }
+        }
+    }
 }
 
 /** Its own composable so the 25-per-second clock only recomposes this row, not the whole overlay. */

@@ -35,7 +35,7 @@ import app.looplayer.data.languageName
 import app.looplayer.data.tabMark
 import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.SubtitleTrack
-import app.looplayer.ui.theme.Inks
+import app.looplayer.ui.theme.Palette
 import app.looplayer.ui.theme.TabularNumbers
 import java.text.NumberFormat
 import java.util.Locale
@@ -106,25 +106,14 @@ private fun SlotRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (ref != null) {
-                    val count = ui.track?.cues?.size
-                    Text(
-                        // Count first: the file name is the part that may be cut.
-                        text = listOfNotNull(count?.let { stringResource(R.string.line_count, it) }, ref.fileName).joinToString(" · "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
             when {
-                ui.loading -> CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp, color = Inks.of(slot).ink)
+                ui.loading -> CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp, color = Palette.Text)
                 ref == null -> FilledTonalButton(
                     onClick = { onPick(slot) },
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Inks.of(slot).ink.copy(alpha = 0.16f),
-                        contentColor = Inks.of(slot).ink,
+                        containerColor = Palette.Raised,
+                        contentColor = Palette.Text,
                     ),
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -138,6 +127,18 @@ private fun SlotRow(
                     }
                 }
             }
+        }
+        if (ref != null) {
+            // Its own full-width line, so the file name (what tells two editions apart) survives large text.
+            val count = ui.track?.cues?.size
+            Text(
+                text = listOfNotNull(ref.fileName, count?.let { stringResource(R.string.line_count, it) }).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularNumbers),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 58.dp, top = 2.dp),
+            )
         }
         if (ref != null && ui.track != null) {
             Row(Modifier.padding(start = 58.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {

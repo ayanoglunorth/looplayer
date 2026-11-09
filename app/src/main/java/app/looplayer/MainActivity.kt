@@ -127,6 +127,10 @@ private fun App(incoming: Uri?, onIncomingHandled: () -> Unit) {
                     session = current,
                     onPickSubtitle = chooseSubtitle,
                     onExit = { screen = Screen.Library },
+                    onChooseAnother = {
+                        screen = Screen.Library
+                        pickVideo.launch(arrayOf("video/*"))
+                    },
                 )
             }
         } else {

@@ -38,7 +38,7 @@
     <string name="pause">Duraklat</string>
     <string name="speed">Hız</string>
     <string name="switch_language">Altyazı dilini değiştir</string>
-    <string name="only_one_subtitle">İkinci altyazı yok. Altyazılar menüsünden ekle.</string>
+    <string name="only_one_subtitle">Henüz ikinci altyazı yok.</string>
     <string name="no_subtitles">Altyazı yok</string>
     <string name="subtitles_off">Altyazı kapalı</string>
     <string name="playback_error">Bu video oynatılamadı.</string>
@@ -46,4 +46,8 @@
     <string name="fit_picture">Sığdır</string>
     <string name="fill_picture">Ekranı doldur</string>
     <string name="add">Ekle</string>
+    <string name="lock_rotation">Ekran yönünü kilitle</string>
+    <string name="unlock_rotation">Ekran yönü kilidini aç</string>
+    <string name="playback_error_body">Dosya taşınmış ya da bu cihazın oynatamadığı bir biçimde olabilir.</string>
+    <string name="choose_another">Başka video seç</string>
 </resources>

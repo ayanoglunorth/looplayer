@@ -1,91 +1,114 @@
 package app.looplayer.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import app.looplayer.subtitle.Slot
+import app.looplayer.R
 
-// Night ink: the app is used where films are watched, in dim rooms, and its main
-// screen is a picture on black. The library is the doorway into that, so it is dark too.
-private val NightInk = Color(0xFF0F0E0D)
-private val Paper = Color(0xFFEDE7DD)
-private val PaperMuted = Color(0xFFB5AC9F)
+/**
+ * True-black flat: the ground is the black around a film, surfaces rise by lightness alone
+ * (no borders, no shadows), the primary action is an inverted white pill, and the single
+ * accent hue is spent only on progress.
+ */
+object Palette {
+    val Ground = Color(0xFF000000)
+    val Surface = Color(0xFF111111)
+    val Raised = Color(0xFF2A2A2A)
+    val Border = Color(0xFF1A1A1A)
+    val Control = Color(0xFF444444)
+    val Text = Color(0xFFFFFFFF)
+    val Muted = Color(0xFFB4B4B4)
+    val Faint = Color(0xFF949494)
+    /** The one hue: how far you are into something. */
+    val Progress = Color(0xFF3EA6FF)
+    val Negative = Color(0xFFE5484D)
 
-/** Each subtitle slot owns one ink, used identically everywhere that slot appears. */
-@Immutable
-data class LanguageInk(val ink: Color, val onInk: Color, val subtitleTint: Color)
-
-object Inks {
-    val A = LanguageInk(ink = Color(0xFFF0B43C), onInk = Color(0xFF2A1D00), subtitleTint = Color(0xFFFFF3DC))
-    val B = LanguageInk(ink = Color(0xFF8DB4FF), onInk = Color(0xFF00194A), subtitleTint = Color(0xFFE6EEFF))
-
-    fun of(slot: Slot) = if (slot == Slot.A) A else B
+    /** Subtitles are white, the convention every viewer already reads fastest. */
+    val Subtitle = Color(0xFFFFFFFF)
 }
 
 private val Colors = darkColorScheme(
-    primary = Inks.A.ink,
-    onPrimary = Inks.A.onInk,
-    primaryContainer = Color(0xFF3A2C0C),
-    onPrimaryContainer = Color(0xFFFFDDA0),
-    secondary = Inks.B.ink,
-    onSecondary = Inks.B.onInk,
-    secondaryContainer = Color(0xFF14284A),
-    onSecondaryContainer = Color(0xFFD6E3FF),
-    tertiary = Inks.B.ink,
-    background = NightInk,
-    onBackground = Paper,
-    surface = NightInk,
-    onSurface = Paper,
-    surfaceVariant = Color(0xFF2A2621),
-    onSurfaceVariant = PaperMuted,
-    surfaceContainerLowest = Color(0xFF0A0908),
-    surfaceContainerLow = Color(0xFF171513),
-    surfaceContainer = Color(0xFF1C1A17),
-    surfaceContainerHigh = Color(0xFF24211D),
-    surfaceContainerHighest = Color(0xFF2D2A25),
-    inverseSurface = Paper,
-    inverseOnSurface = Color(0xFF1C1A17),
-    outline = Color(0xFF6E665B),
-    outlineVariant = Color(0xFF34302A),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
+    primary = Palette.Text,
+    onPrimary = Palette.Ground,
+    primaryContainer = Palette.Raised,
+    onPrimaryContainer = Palette.Text,
+    secondary = Palette.Muted,
+    onSecondary = Palette.Ground,
+    secondaryContainer = Palette.Raised,
+    onSecondaryContainer = Palette.Text,
+    tertiary = Palette.Progress,
+    background = Palette.Ground,
+    onBackground = Palette.Text,
+    surface = Palette.Ground,
+    onSurface = Palette.Text,
+    surfaceVariant = Palette.Raised,
+    onSurfaceVariant = Palette.Muted,
+    surfaceContainerLowest = Palette.Ground,
+    surfaceContainerLow = Palette.Surface,
+    surfaceContainer = Palette.Surface,
+    surfaceContainerHigh = Color(0xFF1C1C1C),
+    surfaceContainerHighest = Palette.Raised,
+    inverseSurface = Palette.Text,
+    inverseOnSurface = Palette.Ground,
+    outline = Palette.Control,
+    outlineVariant = Palette.Border,
+    error = Palette.Negative,
+    onError = Palette.Text,
     scrim = Color.Black,
 )
 
-/** Headwords: a dictionary sets its entries in a bold serif. Everything you operate stays Roboto. */
-private val Headword = FontFamily.Serif
-
-private val base = Typography()
-private val Type = base.copy(
-    displaySmall = base.displaySmall.copy(fontFamily = Headword, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
-    headlineMedium = base.headlineMedium.copy(fontFamily = Headword, fontWeight = FontWeight.Bold, letterSpacing = (-0.25).sp),
-    headlineSmall = base.headlineSmall.copy(fontFamily = Headword, fontWeight = FontWeight.Bold),
-    titleLarge = base.titleLarge.copy(fontFamily = Headword, fontWeight = FontWeight.Bold),
-    titleMedium = base.titleMedium.copy(fontFamily = Headword, fontWeight = FontWeight.SemiBold),
+/** Inter: a screen-first workhorse with full Turkish coverage and tabular figures. */
+val Inter = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_semibold, FontWeight.SemiBold),
+    Font(R.font.inter_bold, FontWeight.Bold),
 )
 
-/** Language codes on tabs: tracked bold caps, like a thumb index. */
-val IndexTabStyle = TextStyle(fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 1.2.sp)
+private fun TextStyle.inter(weight: FontWeight, tracking: Float = 0f) =
+    copy(fontFamily = Inter, fontWeight = weight, letterSpacing = tracking.sp)
+
+private val base = Typography()
+private val Type = Typography(
+    displayLarge = base.displayLarge.inter(FontWeight.SemiBold, -1.2f),
+    displayMedium = base.displayMedium.inter(FontWeight.SemiBold, -1f),
+    displaySmall = base.displaySmall.inter(FontWeight.SemiBold, -0.8f),
+    headlineLarge = base.headlineLarge.inter(FontWeight.SemiBold, -0.6f),
+    headlineMedium = base.headlineMedium.inter(FontWeight.SemiBold, -0.5f),
+    headlineSmall = base.headlineSmall.inter(FontWeight.SemiBold, -0.3f),
+    titleLarge = base.titleLarge.inter(FontWeight.SemiBold, -0.2f),
+    titleMedium = base.titleMedium.inter(FontWeight.SemiBold, -0.1f),
+    titleSmall = base.titleSmall.inter(FontWeight.SemiBold),
+    bodyLarge = base.bodyLarge.inter(FontWeight.Normal),
+    bodyMedium = base.bodyMedium.inter(FontWeight.Normal),
+    bodySmall = base.bodySmall.inter(FontWeight.Normal),
+    labelLarge = base.labelLarge.inter(FontWeight.Medium),
+    labelMedium = base.labelMedium.inter(FontWeight.Medium),
+    labelSmall = base.labelSmall.inter(FontWeight.Medium),
+)
+
+/** Language codes on tabs. */
+val IndexTabStyle = TextStyle(fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, letterSpacing = 0.4.sp)
 
 /** Every time readout uses tabular figures so digits don't jitter while playing. */
-val TabularNumbers = "tnum"
+const val TabularNumbers = "tnum"
 
 private val AppShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(6.dp),
-    medium = RoundedCornerShape(10.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp),
 )
 
 @Composable

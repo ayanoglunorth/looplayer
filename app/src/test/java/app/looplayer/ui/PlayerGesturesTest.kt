@@ -26,7 +26,6 @@ import app.looplayer.ui.player.Controls
 import app.looplayer.ui.player.PlayerGestureHandler
 import app.looplayer.ui.player.SubtitleLine
 import app.looplayer.ui.player.playerGestures
-import app.looplayer.ui.theme.Inks
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -133,7 +132,7 @@ class PlayerGesturesTest {
                     title = "x", isPlaying = true, buffering = false, position = { 0 }, durationMs = 60_000,
                     speed = 1f, zoom = false, marks = mapOf(Slot.A to "TR", Slot.B to "EN"), active = Slot.A,
                     onBack = {}, onPlayPause = {}, onSkip = {}, onScrub = {}, onScrubEnd = {}, onSpeed = {},
-                    onZoom = {}, onSelectLanguage = {}, onOpenSubtitles = {},
+                    onZoom = {}, rotationLocked = false, onRotationLock = {}, onSelectLanguage = {}, onOpenSubtitles = {},
                 )
             }
         }
@@ -163,7 +162,7 @@ class PlayerGesturesTest {
                         ),
                     ),
             ) {
-                SubtitleLine(dual.textAt(1_000), Inks.of(dual.active).subtitleTint)
+                SubtitleLine(dual.textAt(1_000))
             }
         }
         rule.onAllNodesWithText("Merhaba").onFirst().assertExists()
