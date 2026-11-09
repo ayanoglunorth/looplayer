@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Looplayer</string>
+
+    <!-- Library -->
+    <string name="library_title">Kitaplık</string>
+    <string name="open_video">Video aç</string>
+    <string name="empty_title">İki dilde izle</string>
+    <string name="empty_body">Bir video aç, iki altyazı ekle. Oynatırken ekrana çift dokunduğunda dil değişir.</string>
+    <string name="watched_percent">%%%1$d izlendi</string>
+    <string name="finished">Bitti</string>
+    <string name="not_started">Başlanmadı</string>
+    <string name="remove_from_library">Kitaplıktan kaldır</string>
+    <string name="removed_from_library">Kitaplıktan kaldırıldı</string>
+    <string name="undo">Geri al</string>
+    <string name="file_unavailable">Bu dosyaya artık ulaşılamıyor. Yeniden aç.</string>
+
+    <!-- Setup / subtitle slots -->
+    <string name="play">Oynat</string>
+    <string name="resume_from">%1$s konumundan devam et</string>
+    <string name="subtitles">Altyazılar</string>
+    <string name="slot_first">Birinci dil</string>
+    <string name="slot_second">İkinci dil</string>
+    <string name="add_subtitle">Altyazı ekle</string>
+    <string name="replace">Değiştir</string>
+    <string name="remove">Kaldır</string>
+    <string name="line_count">%1$d satır</string>
+    <string name="sync_offset">Zamanlama %1$s sn</string>
+    <string name="earlier">Daha erken</string>
+    <string name="later">Daha geç</string>
+    <string name="switch_hint">Oynatırken ekrana çift dokun: diller arasında geç. Parmağını yana sürükle: ileri ya da geri sar.</string>
+    <string name="show_subtitles">Altyazıyı göster</string>
+    <string name="subtitle_load_failed">Altyazı okunamadı. SRT, VTT ya da ASS dosyası seç.</string>
+    <string name="subtitle_empty">Bu dosyada zamanlı satır bulunamadı.</string>
+
+    <!-- Player -->
+    <string name="back">Geri</string>
+    <string name="pause">Duraklat</string>
+    <string name="speed">Hız</string>
+    <string name="switch_language">Altyazı dilini değiştir</string>
+    <string name="only_one_subtitle">İkinci altyazı yok. Altyazılar menüsünden ekle.</string>
+    <string name="no_subtitles">Altyazı yok</string>
+    <string name="subtitles_off">Altyazı kapalı</string>
+    <string name="playback_error">Bu video oynatılamadı.</string>
+    <string name="seek_position">Konum</string>
+    <string name="fit_picture">Sığdır</string>
+    <string name="fill_picture">Ekranı doldur</string>
+</resources>

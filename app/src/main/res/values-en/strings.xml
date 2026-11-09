@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">Library</string>
+    <string name="open_video">Open video</string>
+    <string name="empty_title">Watch in two languages</string>
+    <string name="empty_body">Open a video and add two subtitles. While it plays, double-tap the screen to switch language.</string>
+    <string name="watched_percent">%1$d%% watched</string>
+    <string name="finished">Finished</string>
+    <string name="not_started">Not started</string>
+    <string name="remove_from_library">Remove from library</string>
+    <string name="removed_from_library">Removed from library</string>
+    <string name="undo">Undo</string>
+    <string name="file_unavailable">This file can no longer be reached. Open it again.</string>
+
+    <string name="play">Play</string>
+    <string name="resume_from">Resume from %1$s</string>
+    <string name="subtitles">Subtitles</string>
+    <string name="slot_first">First language</string>
+    <string name="slot_second">Second language</string>
+    <string name="add_subtitle">Add subtitle</string>
+    <string name="replace">Replace</string>
+    <string name="remove">Remove</string>
+    <string name="line_count">%1$d lines</string>
+    <string name="sync_offset">Timing %1$s s</string>
+    <string name="earlier">Earlier</string>
+    <string name="later">Later</string>
+    <string name="switch_hint">While playing, double-tap the screen to switch languages. Drag sideways to seek.</string>
+    <string name="show_subtitles">Show subtitles</string>
+    <string name="subtitle_load_failed">Couldn\'t read that subtitle. Pick an SRT, VTT or ASS file.</string>
+    <string name="subtitle_empty">No timed lines were found in this file.</string>
+
+    <string name="back">Back</string>
+    <string name="pause">Pause</string>
+    <string name="speed">Speed</string>
+    <string name="switch_language">Switch subtitle language</string>
+    <string name="only_one_subtitle">No second subtitle. Add one from the Subtitles menu.</string>
+    <string name="no_subtitles">No subtitles</string>
+    <string name="subtitles_off">Subtitles off</string>
+    <string name="playback_error">This video couldn\'t be played.</string>
+    <string name="seek_position">Position</string>
+    <string name="fit_picture">Fit to screen</string>
+    <string name="fill_picture">Fill screen</string>
+</resources>

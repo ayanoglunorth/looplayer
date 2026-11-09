@@ -1,0 +1,717 @@
+package app.looplayer.ui.player
+
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
+import android.net.Uri
+import android.view.HapticFeedbackConstants
+import androidx.activity.compose.BackHandler
+import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.AspectRatio
+import androidx.compose.material.icons.rounded.Crop
+import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.Subtitles
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
+import app.looplayer.R
+import app.looplayer.data.SubtitleSession
+import app.looplayer.data.tabMark
+import app.looplayer.subtitle.SeekMath
+import app.looplayer.subtitle.Slot
+import app.looplayer.subtitle.TimeFormat
+import app.looplayer.ui.components.EdgeIndexTabs
+import app.looplayer.ui.components.LanguageSwitch
+import app.looplayer.ui.components.SlotUi
+import app.looplayer.ui.components.SubtitleSlots
+import app.looplayer.ui.theme.Inks
+import app.looplayer.ui.theme.TabularNumbers
+import kotlinx.coroutines.delay
+
+private val Speeds = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
+private const val CONTROLS_TIMEOUT_MS = 3_000L
+
+@OptIn(UnstableApi::class)
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerScreen(
+    session: SubtitleSession,
+    onPickSubtitle: (Slot) -> Unit,
+    onExit: () -> Unit,
+) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val activity = remember(context) { context.findActivity() }
+
+    val player = remember {
+        ExoPlayer.Builder(context)
+            .setAudioAttributes(
+                AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),
+                /* handleAudioFocus = */ true,
+            )
+            .setHandleAudioBecomingNoisy(true)
+            .build()
+            .apply {
+                setMediaItem(MediaItem.fromUri(Uri.parse(session.entry.uri)))
+                // Subtitles are drawn by this screen, never by the player.
+                trackSelectionParameters = trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
+                prepare()
+                seekTo(session.entry.resumeMs)
+                playWhenReady = true
+            }
+    }
+
+    var isPlaying by remember { mutableStateOf(false) }
+    var buffering by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<PlaybackException?>(null) }
+    var positionMs by remember { mutableLongStateOf(session.entry.resumeMs) }
+    var durationMs by remember { mutableLongStateOf(session.entry.durationMs) }
+    var speed by remember { mutableFloatStateOf(1f) }
+    var zoom by remember { mutableStateOf(false) }
+
+    var controlsVisible by remember { mutableStateOf(true) }
+    var interaction by remember { mutableIntStateOf(0) }  // bump to restart the hide timer
+    var tabFlash by remember { mutableIntStateOf(0) }
+    var tabsShown by remember { mutableStateOf(false) }
+    var hint by remember { mutableStateOf<Int?>(null) }
+    var seekPreview by remember { mutableStateOf<Long?>(null) }
+    var seekFrom by remember { mutableLongStateOf(0L) }
+    var sliderDrag by remember { mutableStateOf<Float?>(null) }
+    var sheetOpen by remember { mutableStateOf(false) }
+
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+            override fun onPlaybackStateChanged(state: Int) {
+                buffering = state == Player.STATE_BUFFERING || state == Player.STATE_IDLE
+                if (player.duration > 0) durationMs = player.duration
+                if (state == Player.STATE_ENDED) controlsVisible = true
+            }
+            override fun onPlayerError(e: PlaybackException) { error = e }
+            override fun onVideoSizeChanged(size: VideoSize) {
+                if (size.width > 0 && size.height > 0) {
+                    val landscape = size.width * size.pixelWidthHeightRatio >= size.height
+                    activity?.requestedOrientation = if (landscape) {
+                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                    }
+                }
+            }
+        }
+        player.addListener(listener)
+        onDispose {
+            session.savePosition(player.currentPosition, player.duration)
+            player.removeListener(listener)
+            player.release()
+        }
+    }
+
+    // Full screen: hide system bars (a swipe from the edge shows them briefly), restore on exit.
+    DisposableEffect(activity) {
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller?.hide(WindowInsetsCompat.Type.systemBars())
+        onDispose {
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    DisposableEffect(isPlaying) {
+        view.keepScreenOn = isPlaying
+        onDispose { view.keepScreenOn = false }
+    }
+
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                player.pause()
+                session.savePosition(player.currentPosition, player.duration)
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+
+    // The clock that drives subtitles and the scrubber.
+    LaunchedEffect(player) {
+        var sinceSave = 0L
+        while (true) {
+            positionMs = player.currentPosition
+            if (player.duration > 0) durationMs = player.duration
+            val step = if (player.isPlaying) 40L else 200L
+            delay(step)
+            sinceSave += step
+            if (sinceSave >= 10_000) {
+                sinceSave = 0
+                session.savePosition(positionMs, durationMs)
+            }
+        }
+    }
+
+    LaunchedEffect(controlsVisible, isPlaying, interaction, sheetOpen) {
+        if (controlsVisible && isPlaying && !sheetOpen) {
+            delay(CONTROLS_TIMEOUT_MS)
+            controlsVisible = false
+        }
+    }
+    LaunchedEffect(tabFlash) {
+        if (tabFlash == 0) return@LaunchedEffect
+        tabsShown = true
+        delay(1_400)
+        tabsShown = false
+    }
+    LaunchedEffect(hint) {
+        if (hint != null) {
+            delay(2_400)
+            hint = null
+        }
+    }
+
+    BackHandler { onExit() }
+
+    val dual = session.dual
+    val marks = Slot.entries.mapNotNull { s -> session.tracks[s]?.let { s to tabMark(session.entry.sub(s), s) } }.toMap()
+
+    val switchLanguage = rememberUpdatedState {
+        if (session.switch()) {
+            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            tabFlash++
+        } else {
+            hint = if (session.tracks.isEmpty()) R.string.no_subtitles else R.string.only_one_subtitle
+        }
+    }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+    ) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    useController = false
+                    subtitleView?.visibility = android.view.View.GONE
+                    setShutterBackgroundColor(android.graphics.Color.BLACK)
+                    setKeepContentOnPlayerReset(true)
+                    this.player = player
+                }
+            },
+            update = {
+                it.resizeMode = if (zoom) AspectRatioFrameLayout.RESIZE_MODE_ZOOM else AspectRatioFrameLayout.RESIZE_MODE_FIT
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        // Gesture surface: tap = controls, double-tap = language, sideways drag = seek.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .semantics {
+                    customActions = listOf(
+                        CustomAccessibilityAction(context.getString(R.string.switch_language)) { switchLanguage.value(); true },
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            controlsVisible = !controlsVisible
+                            interaction++
+                        },
+                        onDoubleTap = { switchLanguage.value() },
+                    )
+                }
+                .pointerInput(Unit) {
+                    var drag = 0f
+                    var lastSeek = 0L
+                    detectHorizontalDragGestures(
+                        onDragStart = {
+                            drag = 0f
+                            seekFrom = player.currentPosition
+                            seekPreview = seekFrom
+                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                        },
+                        onHorizontalDrag = { change, dx ->
+                            change.consume()
+                            drag += dx
+                            val target = SeekMath.target(seekFrom, drag, size.width.toFloat(), player.duration.coerceAtLeast(0))
+                            seekPreview = target
+                            val now = System.currentTimeMillis()
+                            if (now - lastSeek > 120) {
+                                lastSeek = now
+                                player.seekTo(target)
+                            }
+                        },
+                        onDragEnd = {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                            seekPreview?.let { player.seekTo(it); positionMs = it }
+                            seekPreview = null
+                        },
+                        onDragCancel = {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                            seekPreview = null
+                        },
+                    )
+                },
+        )
+
+        // Subtitle line, lifted clear of the control bar while it is up.
+        val lift by animateDpAsState(if (controlsVisible) 132.dp else 28.dp, tween(220), label = "lift")
+        AnimatedContent(
+            targetState = dual.active,
+            transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(90)) },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(bottom = lift, start = 32.dp, end = 32.dp),
+            label = "subtitle",
+        ) { slot ->
+            val text = if (session.visible) session.tracks[slot]?.textAt(positionMs) else null
+            SubtitleLine(text, Inks.of(slot).subtitleTint)
+        }
+
+        // Thumb index on the right edge: appears with the controls or briefly after a switch.
+        AnimatedVisibility(
+            visible = (tabsShown || controlsVisible) && marks.isNotEmpty(),
+            enter = slideInHorizontally(tween(200)) { it } + fadeIn(tween(200)),
+            exit = slideOutHorizontally(tween(160)) { it } + fadeOut(tween(160)),
+            modifier = Modifier.align(Alignment.CenterEnd),
+        ) {
+            EdgeIndexTabs(marks = marks, active = dual.active)
+        }
+
+        // Drag-to-seek readout.
+        seekPreview?.let { target ->
+            Column(
+                Modifier
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xCC0F0E0D))
+                    .padding(horizontal = 24.dp, vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    TimeFormat.formatDelta(target - seekFrom),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = TabularNumbers),
+                    color = Color.White,
+                )
+                Text(
+                    "${TimeFormat.format(target)} / ${TimeFormat.format(durationMs)}",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularNumbers),
+                    color = Color.White.copy(alpha = 0.75f),
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = controlsVisible && seekPreview == null && error == null,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(140)),
+        ) {
+            Controls(
+                title = session.entry.title,
+                isPlaying = isPlaying,
+                buffering = buffering,
+                positionMs = sliderDrag?.toLong() ?: positionMs,
+                durationMs = durationMs,
+                speed = speed,
+                zoom = zoom,
+                marks = marks,
+                active = dual.active,
+                onBack = onExit,
+                onPlayPause = {
+                    if (player.playbackState == Player.STATE_ENDED) player.seekTo(0)
+                    if (player.isPlaying) player.pause() else player.play()
+                    interaction++
+                },
+                onSkip = { delta ->
+                    player.seekTo((player.currentPosition + delta).coerceIn(0, durationMs.coerceAtLeast(0)))
+                    interaction++
+                },
+                onScrub = { sliderDrag = it; interaction++ },
+                onScrubEnd = {
+                    sliderDrag?.let { player.seekTo(it.toLong()); positionMs = it.toLong() }
+                    sliderDrag = null
+                },
+                onSpeed = { speed = it; player.setPlaybackSpeed(it); interaction++ },
+                onZoom = { zoom = !zoom; interaction++ },
+                onSelectLanguage = { slot ->
+                    if (slot != dual.active) {
+                        session.select(slot)
+                        tabFlash++
+                    }
+                    interaction++
+                },
+                onOpenSubtitles = { sheetOpen = true },
+            )
+        }
+
+        if (buffering && !controlsVisible && error == null) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center).size(40.dp), color = Color.White, strokeWidth = 3.dp)
+        }
+
+        AnimatedVisibility(
+            visible = hint != null,
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(200)),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(top = 72.dp),
+        ) {
+            val last = remember { mutableIntStateOf(R.string.only_one_subtitle) }
+            hint?.let { last.intValue = it }
+            Text(
+                stringResource(last.intValue),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                modifier = Modifier
+                    .widthIn(max = 420.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.inverseSurface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        }
+
+        error?.let { PlaybackError(onExit, Modifier.align(Alignment.Center)) }
+    }
+
+    if (sheetOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { sheetOpen = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp),
+            ) {
+                Text(stringResource(R.string.subtitles), style = MaterialTheme.typography.titleLarge)
+                SubtitleSlots(
+                    slots = Slot.entries.associateWith { SlotUi(session.entry.sub(it), session.tracks[it], it in session.loading) },
+                    active = dual.active,
+                    visible = session.visible,
+                    onPick = onPickSubtitle,
+                    onRemove = session::remove,
+                    onOffset = session::shift,
+                    onVisibleChange = { session.visible = it },
+                )
+            }
+        }
+    }
+}
+
+/** Subtitle text: paper-white tinted by its language's ink, with a dark outline that holds on any picture. */
+@Composable
+private fun SubtitleLine(text: String?, tint: Color) {
+    if (text.isNullOrBlank()) return
+    BoxWithConstraints {
+        val size = if (maxWidth > 600.dp) 24.sp else 19.sp
+        val base = TextStyle(
+            fontSize = size,
+            lineHeight = size * 1.25f,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+        )
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text,
+                style = base.copy(
+                    color = Color.Black.copy(alpha = 0.9f),
+                    drawStyle = Stroke(width = 5f, join = StrokeJoin.Round),
+                ),
+            )
+            Text(
+                text,
+                style = base.copy(
+                    color = tint,
+                    shadow = Shadow(Color.Black.copy(alpha = 0.6f), blurRadius = 6f),
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Controls(
+    title: String,
+    isPlaying: Boolean,
+    buffering: Boolean,
+    positionMs: Long,
+    durationMs: Long,
+    speed: Float,
+    zoom: Boolean,
+    marks: Map<Slot, String>,
+    active: Slot,
+    onBack: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSkip: (Long) -> Unit,
+    onScrub: (Float) -> Unit,
+    onScrubEnd: () -> Unit,
+    onSpeed: (Float) -> Unit,
+    onZoom: () -> Unit,
+    onSelectLanguage: (Slot) -> Unit,
+    onOpenSubtitles: () -> Unit,
+) {
+    Box(Modifier.fillMaxSize()) {
+        // Scrims exist for legibility of the controls over bright footage.
+        Box(
+            Modifier.fillMaxWidth().height(140.dp).align(Alignment.TopCenter)
+                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.7f), Color.Transparent))),
+        )
+        Box(
+            Modifier.fillMaxWidth().height(200.dp).align(Alignment.BottomCenter)
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)))),
+        )
+
+        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 8.dp)) {
+            // Top: back, title, speed, subtitles.
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
+                }
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                )
+                SpeedMenu(speed, onSpeed)
+                IconButton(onClick = onOpenSubtitles) {
+                    Icon(Icons.Rounded.Subtitles, contentDescription = stringResource(R.string.subtitles), tint = Color.White)
+                }
+            }
+
+            // Centre: skip back, play/pause, skip forward. Visible equivalents of the drag gesture.
+            Row(
+                Modifier.weight(1f).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { onSkip(-10_000) }, modifier = Modifier.size(56.dp)) {
+                    Icon(Icons.Rounded.Replay10, contentDescription = TimeFormat.formatDelta(-10_000), tint = Color.White, modifier = Modifier.size(32.dp))
+                }
+                Box(contentAlignment = Alignment.Center) {
+                    IconButton(
+                        onClick = onPlayPause,
+                        modifier = Modifier.size(76.dp).clip(CircleShape),
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.White.copy(alpha = 0.14f)),
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+                            tint = Color.White,
+                            modifier = Modifier.size(44.dp),
+                        )
+                    }
+                    if (buffering) CircularProgressIndicator(Modifier.size(76.dp), color = Color.White.copy(alpha = 0.6f), strokeWidth = 2.dp)
+                }
+                IconButton(onClick = { onSkip(10_000) }, modifier = Modifier.size(56.dp)) {
+                    Icon(Icons.Rounded.Forward10, contentDescription = TimeFormat.formatDelta(10_000), tint = Color.White, modifier = Modifier.size(32.dp))
+                }
+            }
+
+            // Bottom: scrubber with times, then the language switch and picture fit.
+            val seekLabel = stringResource(R.string.seek_position)
+            val timeStyle = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TabularNumbers, color = Color.White)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(TimeFormat.format(positionMs), style = timeStyle, modifier = Modifier.widthIn(min = 52.dp))
+                Slider(
+                    value = positionMs.toFloat().coerceIn(0f, durationMs.coerceAtLeast(1).toFloat()),
+                    onValueChange = onScrub,
+                    onValueChangeFinished = onScrubEnd,
+                    valueRange = 0f..durationMs.coerceAtLeast(1).toFloat(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.25f),
+                    ),
+                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                        .semantics { contentDescription = seekLabel },
+                )
+                Text(TimeFormat.format(durationMs), style = timeStyle, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 52.dp))
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(start = 8.dp, end = 0.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (marks.isNotEmpty()) {
+                    LanguageSwitch(marks = marks, active = active, onSelect = onSelectLanguage)
+                } else {
+                    TextButton(onClick = onOpenSubtitles) {
+                        Text(stringResource(R.string.add_subtitle), color = Color.White)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = onZoom) {
+                    Icon(
+                        if (zoom) Icons.Rounded.AspectRatio else Icons.Rounded.Crop,
+                        contentDescription = stringResource(if (zoom) R.string.fit_picture else R.string.fill_picture),
+                        tint = Color.White,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpeedMenu(speed: Float, onSpeed: (Float) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val label = stringResource(R.string.speed)
+    Box {
+        TextButton(onClick = { open = true }) {
+            Text(
+                speedLabel(speed),
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TabularNumbers),
+                color = Color.White,
+                modifier = Modifier.semantics { contentDescription = "$label ${speedLabel(speed)}" },
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            Speeds.forEach { s ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            speedLabel(s),
+                            fontWeight = if (s == speed) FontWeight.Bold else FontWeight.Normal,
+                            color = if (s == speed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        )
+                    },
+                    onClick = { open = false; onSpeed(s) },
+                )
+            }
+        }
+    }
+}
+
+private fun speedLabel(s: Float): String =
+    (if (s % 1f == 0f) s.toInt().toString() else s.toString().trimEnd('0')) + "×"
+
+@Composable
+private fun PlaybackError(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(stringResource(R.string.playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
+        Spacer(Modifier.height(16.dp))
+        FilledTonalButton(onClick = onBack) { Text(stringResource(R.string.back)) }
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    var c = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
