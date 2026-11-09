@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -31,6 +32,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -49,4 +54,16 @@ dependencies {
 
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    debugImplementation(libs.compose.ui.test.manifest)
+}
+
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
 }

@@ -45,4 +45,5 @@
     <string name="seek_position">Konum</string>
     <string name="fit_picture">Sığdır</string>
     <string name="fill_picture">Ekranı doldur</string>
+    <string name="add">Ekle</string>
 </resources>

@@ -18,8 +18,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -76,6 +74,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -83,7 +82,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -178,6 +176,7 @@ fun PlayerScreen(
     var hint by remember { mutableStateOf<Int?>(null) }
     var seekPreview by remember { mutableStateOf<Long?>(null) }
     var seekFrom by remember { mutableLongStateOf(0L) }
+    var lastLiveSeek by remember { mutableLongStateOf(0L) }
     var sliderDrag by remember { mutableStateOf<Float?>(null) }
     var sheetOpen by remember { mutableStateOf(false) }
 
@@ -317,51 +316,43 @@ fun PlayerScreen(
                         CustomAccessibilityAction(context.getString(R.string.switch_language)) { switchLanguage.value(); true },
                     )
                 }
-                .pointerInput(Unit) {
-                    detectTapGestures(
+                .playerGestures(
+                    PlayerGestureHandler(
                         onTap = {
                             controlsVisible = !controlsVisible
                             interaction++
                         },
                         onDoubleTap = { switchLanguage.value() },
-                    )
-                }
-                .pointerInput(Unit) {
-                    var drag = 0f
-                    var lastSeek = 0L
-                    detectHorizontalDragGestures(
-                        onDragStart = {
-                            drag = 0f
+                        onSeekStart = {
                             seekFrom = player.currentPosition
                             seekPreview = seekFrom
                             player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
                         },
-                        onHorizontalDrag = { change, dx ->
-                            change.consume()
-                            drag += dx
-                            val target = SeekMath.target(seekFrom, drag, size.width.toFloat(), player.duration.coerceAtLeast(0))
+                        onSeek = { drag, width ->
+                            val target = SeekMath.target(seekFrom, drag, width, player.duration.coerceAtLeast(0))
                             seekPreview = target
+                            // Show frames while dragging, but don't flood the decoder with seeks.
                             val now = System.currentTimeMillis()
-                            if (now - lastSeek > 120) {
-                                lastSeek = now
+                            if (now - lastLiveSeek > 120) {
+                                lastLiveSeek = now
                                 player.seekTo(target)
                             }
                         },
-                        onDragEnd = {
+                        onSeekEnd = {
                             player.setSeekParameters(SeekParameters.EXACT)
                             seekPreview?.let { player.seekTo(it); positionMs = it }
                             seekPreview = null
                         },
-                        onDragCancel = {
+                        onSeekCancel = {
                             player.setSeekParameters(SeekParameters.EXACT)
                             seekPreview = null
                         },
-                    )
-                },
+                    ),
+                ),
         )
 
         // Subtitle line, lifted clear of the control bar while it is up.
-        val lift by animateDpAsState(if (controlsVisible) 132.dp else 28.dp, tween(220), label = "lift")
+        val lift by animateDpAsState(if (controlsVisible) 116.dp else 28.dp, tween(220), label = "lift")
         AnimatedContent(
             targetState = dual.active,
             transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(90)) },
@@ -377,7 +368,7 @@ fun PlayerScreen(
 
         // Thumb index on the right edge: appears with the controls or briefly after a switch.
         AnimatedVisibility(
-            visible = (tabsShown || controlsVisible) && marks.isNotEmpty(),
+            visible = tabsShown && marks.isNotEmpty(),
             enter = slideInHorizontally(tween(200)) { it } + fadeIn(tween(200)),
             exit = slideOutHorizontally(tween(160)) { it } + fadeOut(tween(160)),
             modifier = Modifier.align(Alignment.CenterEnd),
@@ -511,7 +502,7 @@ fun PlayerScreen(
 
 /** Subtitle text: paper-white tinted by its language's ink, with a dark outline that holds on any picture. */
 @Composable
-private fun SubtitleLine(text: String?, tint: Color) {
+internal fun SubtitleLine(text: String?, tint: Color) {
     if (text.isNullOrBlank()) return
     BoxWithConstraints {
         val size = if (maxWidth > 600.dp) 24.sp else 19.sp
@@ -540,8 +531,9 @@ private fun SubtitleLine(text: String?, tint: Color) {
     }
 }
 
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Controls(
+internal fun Controls(
     title: String,
     isPlaying: Boolean,
     buffering: Boolean,
@@ -596,7 +588,7 @@ private fun Controls(
             Row(
                 Modifier.weight(1f).fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = BiasAlignment.Vertical(-0.45f),
             ) {
                 IconButton(onClick = { onSkip(-10_000) }, modifier = Modifier.size(56.dp)) {
                     Icon(Icons.Rounded.Replay10, contentDescription = TimeFormat.formatDelta(-10_000), tint = Color.White, modifier = Modifier.size(32.dp))
@@ -623,6 +615,11 @@ private fun Controls(
 
             // Bottom: scrubber with times, then the language switch and picture fit.
             val seekLabel = stringResource(R.string.seek_position)
+            val scrubColors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.White,
+                inactiveTrackColor = Color.White.copy(alpha = 0.28f),
+            )
             val timeStyle = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TabularNumbers, color = Color.White)
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp)) {
                 Text(TimeFormat.format(positionMs), style = timeStyle, modifier = Modifier.widthIn(min = 52.dp))
@@ -631,11 +628,16 @@ private fun Controls(
                     onValueChange = onScrub,
                     onValueChangeFinished = onScrubEnd,
                     valueRange = 0f..durationMs.coerceAtLeast(1).toFloat(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.25f),
-                    ),
+                    colors = scrubColors,
+                    track = { state ->
+                        SliderDefaults.Track(
+                            sliderState = state,
+                            colors = scrubColors,
+                            modifier = Modifier.height(4.dp),
+                            thumbTrackGapSize = 0.dp,
+                            drawStopIndicator = null,
+                        )
+                    },
                     modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
                         .semantics { contentDescription = seekLabel },
                 )

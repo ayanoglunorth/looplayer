@@ -16,7 +16,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -100,7 +101,7 @@ private fun SlotRow(
             Column(Modifier.weight(1f)) {
                 Text(
                     text = ref?.let { languageName(it.language) ?: it.fileName.substringBeforeLast('.') } ?: placeholder,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = if (ref != null) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
                     color = if (ref != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -108,10 +109,8 @@ private fun SlotRow(
                 if (ref != null) {
                     val count = ui.track?.cues?.size
                     Text(
-                        text = buildString {
-                            append(ref.fileName)
-                            if (count != null) append(" · ").append(stringResource(R.string.line_count, count))
-                        },
+                        // Count first: the file name is the part that may be cut.
+                        text = listOfNotNull(count?.let { stringResource(R.string.line_count, it) }, ref.fileName).joinToString(" · "),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -121,10 +120,16 @@ private fun SlotRow(
             }
             when {
                 ui.loading -> CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp, color = Inks.of(slot).ink)
-                ref == null -> OutlinedButton(onClick = { onPick(slot) }) {
+                ref == null -> FilledTonalButton(
+                    onClick = { onPick(slot) },
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = Inks.of(slot).ink.copy(alpha = 0.16f),
+                        contentColor = Inks.of(slot).ink,
+                    ),
+                ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.add_subtitle))
+                    Text(stringResource(R.string.add))
                 }
                 else -> {
                     TextButton(onClick = { onPick(slot) }) { Text(stringResource(R.string.replace)) }
