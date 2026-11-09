@@ -6,7 +6,6 @@ colors:
   surface: "#111111"
   surface-high: "#1C1C1C"
   raised: "#2A2A2A"
-  hairline: "#1A1A1A"
   control: "#444444"
   text: "#FFFFFF"
   muted: "#B4B4B4"
@@ -121,7 +120,7 @@ components:
     width: "52px"
     height: "44px"
   edge-tab-idle:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "{colors.raised}"
     textColor: "{colors.muted}"
     typography: "{typography.index-tab}"
     rounded: "{rounded.tab}"
@@ -186,7 +185,7 @@ The system is dark-only by decision. There is no light scheme and none should be
 Type is Inter throughout, bundled with the app (Inter 4.1, SIL Open Font License 1.1; files `app/src/main/res/font/inter_{regular,medium,semibold,bold}.ttf`, license text at `app/src/main/assets/licenses/Inter-OFL.txt`). It was chosen for a professional, streaming-platform feel, full Turkish coverage and tabular figures. Dimensions in this file are dp and type sizes sp, written as px for portability.
 
 **Key Characteristics:**
-- True-black ground (#000) with tonal steps for surfaces; no borders around surfaces, no drop shadows at rest.
+- True-black ground (#000) with tonal steps for surfaces; no borders, no divider lines, no drop shadows at rest.
 - The primary action is an inverted white pill with black text.
 - One hue, progress blue, reserved for watched progress.
 - Language marks are inverted-white when speaking, muted on a dark step when not, in every context (edge tabs, control-bar switch, list marks).
@@ -204,10 +203,9 @@ A monochrome ladder from black to white with one blue reserved for progress.
 
 ### Neutral
 - **Theatre Black** (ground): app background, top app bar, the player behind the video, the playback-error screen, and the text on every inverted white element.
-- **Booth Grey** (surface): bottom sheets; the language switch container (at 80% opacity), idle edge tabs (85%), and the seek readout and hint pill (88%) over the picture.
+- **Booth Grey** (surface): bottom sheets; the language switch container (at 80% opacity), and the seek readout and hint pill (88%) over the picture.
 - **Slate Step** (surface-high): thumbnail placeholder ground.
-- **Raised Grey** (raised): idle slot marks and the tonal "Add" button.
-- **Hairline** (hairline): the only line in the system: 1px dividers between library rows (inset to the text column) and between subtitle slot rows.
+- **Raised Grey** (raised): idle edge tabs, idle slot marks and the tonal "Add" button.
 - **Control Grey** (control): placeholder film glyph in empty thumbnails.
 - **Dim Silver** (muted): secondary text (durations, file names, timing offsets, helper copy) and idle language marks. About 10.6:1 on ground and 7:1 on raised.
 
@@ -242,9 +240,9 @@ A monochrome ladder from black to white with one blue reserved for progress.
 
 ## Layout
 
-Phone and tablet, portrait and landscape. The library is a single column capped at 720dp, centred on tablets, with the large app bar constrained to the same column so heading and rows share one left edge. Rows are 16dp in from the start, with a 128dp 16:9 thumbnail, 16dp gap, and a text column of title, metadata and language marks spaced 6dp apart; row dividers start at the text column. The FAB leaves 96dp of bottom clearance on the list.
+Phone and tablet, portrait and landscape. The library is a single column capped at 720dp, centred on tablets, with the large app bar constrained to the same column so heading and rows share one left edge. Rows are 16dp in from the start, with a 128dp 16:9 thumbnail, 16dp gap, and a text column of title, metadata and language marks spaced 6dp apart. Rows have 14dp vertical padding and no dividers: separation is spacing alone. The FAB leaves 96dp of bottom clearance on the list.
 
-Sheets use 24dp horizontal padding; slot rows use 14dp vertical padding, with secondary lines indented 58dp to align under the language name. Empty and error states are a 420dp-max column, left-aligned (library) or centred (error), with 32dp side padding.
+Sheets use 24dp horizontal padding; slot rows use 14dp vertical padding with an 8dp gap between rows (and before the show-subtitles row), with secondary lines indented 58dp to align under the language name. Empty and error states are a 420dp-max column, left-aligned (library) or centred (error), with 32dp side padding.
 
 The player is full-bleed under the system bars, with controls inside the safe-drawing insets: a top row (back, title, speed, subtitles), a centre row (−10 s, a 76dp play/pause disc, +10 s, 40dp apart, set slightly above centre), and a bottom block (scrubber with 52dp-min time columns, then the language switch at the start and rotation lock and fill/fit at the end). The subtitle sits 28dp above the bottom edge and lifts to 116dp when controls show. Edge tabs are centred on the end edge. Touch targets are at least 48dp.
 
@@ -252,13 +250,13 @@ Spacing rhythm is 4dp-based (4, 8, 12, 16, 24, 32), with 6dp and 14dp as recurri
 
 ## Elevation & Depth
 
-Flat. Surfaces rise by lightness alone (#000 → #111 → #1C1C1C → #2A2A2A) and carry no drop shadows and no outlines at rest. Over the picture, depth is translucency: dark surface panels at 80–88% opacity, and two black gradient scrims behind visible controls (top 140dp from 70% to clear, bottom 200dp from clear to 80%) so white chrome stays legible over bright footage.
+Flat. Surfaces rise by lightness alone (#000 → #111 → #1C1C1C → #2A2A2A) and carry no drop shadows and no outlines at rest. Over the picture, depth is translucency: dark surface panels at 80–88% opacity, and two black gradient scrims behind visible controls (top 140dp from 70% to clear, bottom 200dp from clear to 80%) so white chrome stays legible over bright footage. The subtitle line is drawn above the scrims, so it keeps full white while the controls are up.
 
 ### Shadow Vocabulary
 - **Subtitle outline** (5px round-joined stroke at rgba(0,0,0,0.9) plus a 6px blur shadow at rgba(0,0,0,0.6)): subtitle text only. This is how white captions stay readable on any footage, and it is part of the world, not an exception to remove.
 
 ### Named Rules
-**The Lightness Not Shadow Rule.** A surface that needs to sit above another gets a lighter grey step or a translucent dark panel, never a drop shadow or a border.
+**The Lightness Not Shadow Rule.** A surface that needs to sit above another gets a lighter grey step or a translucent dark panel, never a drop shadow or a border. Lists separate items by space, not lines.
 
 ## Shapes
 
@@ -280,7 +278,7 @@ Softly rounded, never sharp and never bubbly. Thumbnails use 8px corners; the bo
 - **Corner Style:** 28px top corners on bottom sheets; 8px on thumbnails.
 - **Background:** sheets on surface (#111111); thumbnails on surface-high with a control-grey film glyph until a frame loads.
 - **Shadow Strategy:** none (see Elevation & Depth).
-- **Border:** none; rows are separated by hairline dividers.
+- **Border:** none; rows are separated by spacing, never by divider lines.
 - **Internal Padding:** 24dp horizontal in sheets.
 
 ### Inputs / Fields
@@ -292,7 +290,7 @@ Softly rounded, never sharp and never bubbly. Thumbnails use 8px corners; the bo
 - **Player top bar:** back arrow, single-line title, speed readout (`1×`, tabular), subtitles icon; white over the top scrim.
 
 ### Edge Index Tabs (signature)
-A vertical stack of language tabs on the right edge of the picture, one per loaded subtitle (52×44dp, 76×60dp at ≥840dp, 6dp or 8dp apart). The speaking tab is white with black text and sits flush to the edge; idle tabs are booth grey at 85% with muted text, pulled 10dp in. On a switch the active tab flips (x-axis rotation 90° → 0°, 260ms, FastOutSlowIn) and its reach animates over 220ms. The stack slides in from the edge (200ms), shows with the controls or for 1.4 s after a switch, and slides out (160ms).
+A vertical stack of language tabs on the right edge of the picture, one per loaded subtitle (52×44dp, 76×60dp at ≥840dp, 6dp or 8dp apart). The speaking tab is white with black text and sits flush to the edge; idle tabs are opaque raised grey with muted text, pulled 10dp in. On a switch the active tab flips (x-axis rotation 90° → 0°, 260ms, FastOutSlowIn) and its reach animates over 220ms. The stack slides in from the edge (200ms), shows with the controls or for 1.4 s after a switch, and slides out (160ms).
 
 ### Language Switch (signature)
 The same two tabs laid side by side in the control bar's bottom-start: a 10px booth-grey tray at 80% with 3dp padding holding 52×42dp tabs with 7px corners; the active tab white with black text, the idle one transparent with muted text. Colour changes over 180ms. Tapping either selects it. It is the visible equivalent of the double-tap gesture.
@@ -316,7 +314,7 @@ Centred, low, white Inter semibold with the subtitle outline, 32dp side padding,
 - **Do** respect Remove animations: the tab flip, slides and fades must resolve instantly when animations are off.
 
 ### Don't:
-- **Don't** put drop shadows or outlines on surfaces at rest; use a lighter grey step or a translucent dark panel.
+- **Don't** put drop shadows, outlines or divider lines on surfaces at rest; use a lighter grey step, a translucent dark panel, or spacing.
 - **Don't** introduce a second accent hue, or colour-code the two subtitle languages; slots differ by position and inversion, not by ink.
 - **Don't** make an overlay on the picture brighter than the picture's chrome; notices sit on 88% dark panels.
 - **Don't** restore Material's default positive letter-spacing on body and labels.

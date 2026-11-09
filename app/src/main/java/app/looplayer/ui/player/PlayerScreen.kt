@@ -81,6 +81,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -364,6 +365,8 @@ fun PlayerScreen(
             transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(90)) },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                // Above the controls' scrim, so the line keeps full contrast while the controls are up.
+                .zIndex(1f)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(bottom = lift, start = 32.dp, end = 32.dp),
             label = "subtitle",
@@ -748,7 +751,7 @@ internal fun HintPill(text: String, modifier: Modifier = Modifier, actionLabel: 
     Row(
         modifier
             .widthIn(max = 480.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(Palette.Surface.copy(alpha = 0.88f))
             .heightIn(min = 48.dp)
             .padding(start = 16.dp, end = if (actionLabel != null) 4.dp else 16.dp),

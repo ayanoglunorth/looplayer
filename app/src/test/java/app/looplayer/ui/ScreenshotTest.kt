@@ -192,9 +192,6 @@ class ScreenshotTest {
 
     @Composable
     private fun playerControls() = FakeFrame {
-        Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 116.dp)) {
-            SubtitleLine("Bunu sana daha önce de söylemiştim,\nama dinlemedin.")
-        }
         Controls(
             title = "Kış Uykusu", isPlaying = true, buffering = false,
             position = { 4_100_000 }, durationMs = 11_760_000, speed = 1f, zoom = false,
@@ -202,6 +199,10 @@ class ScreenshotTest {
             onBack = {}, onPlayPause = {}, onSkip = {}, onScrub = {}, onScrubEnd = {},
             onSpeed = {}, onZoom = {}, rotationLocked = false, onRotationLock = {}, onSelectLanguage = {}, onOpenSubtitles = {},
         )
+        // Same order as the app: the subtitle sits above the controls' scrim.
+        Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 116.dp)) {
+            SubtitleLine("Bunu sana daha önce de söylemiştim,\nama dinlemedin.")
+        }
     }
 
     @Composable

@@ -1,0 +1,382 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T00:00:00Z",
+  "title": "Design System: Looplayer",
+  "extensions": {
+    "platform": "android (Jetpack Compose, Material 3); dark-only by decision; dimensions dp and type sp, written as px",
+    "fontProvenance": {
+      "family": "Inter",
+      "version": "4.1",
+      "license": "SIL Open Font License 1.1",
+      "files": [
+        "app/src/main/res/font/inter_regular.ttf",
+        "app/src/main/res/font/inter_medium.ttf",
+        "app/src/main/res/font/inter_semibold.ttf",
+        "app/src/main/res/font/inter_bold.ttf"
+      ],
+      "licenseText": "app/src/main/assets/licenses/Inter-OFL.txt",
+      "source": "https://github.com/rsms/inter"
+    },
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Theatre Black",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#000000",
+          "#0A0A0A",
+          "#111111",
+          "#1C1C1C",
+          "#2A2A2A",
+          "#444444",
+          "#949494",
+          "#FFFFFF"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Booth Grey",
+        "canonical": "#111111",
+        "tonalRamp": [
+          "#000000",
+          "#0A0A0A",
+          "#111111",
+          "#1C1C1C",
+          "#2A2A2A",
+          "#444444",
+          "#949494",
+          "#FFFFFF"
+        ]
+      },
+      "surface-high": {
+        "role": "neutral",
+        "displayName": "Slate Step",
+        "canonical": "#1C1C1C",
+        "tonalRamp": [
+          "#000000",
+          "#0A0A0A",
+          "#111111",
+          "#1C1C1C",
+          "#2A2A2A",
+          "#444444",
+          "#949494",
+          "#FFFFFF"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised Grey",
+        "canonical": "#2A2A2A",
+        "tonalRamp": [
+          "#000000",
+          "#0A0A0A",
+          "#111111",
+          "#1C1C1C",
+          "#2A2A2A",
+          "#444444",
+          "#949494",
+          "#FFFFFF"
+        ]
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "Control Grey",
+        "canonical": "#444444",
+        "tonalRamp": [
+          "#000000",
+          "#111111",
+          "#2A2A2A",
+          "#444444",
+          "#6B6B6B",
+          "#949494",
+          "#B4B4B4",
+          "#FFFFFF"
+        ]
+      },
+      "text": {
+        "role": "primary",
+        "displayName": "Projector White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#000000",
+          "#1C1C1C",
+          "#444444",
+          "#6B6B6B",
+          "#949494",
+          "#B4B4B4",
+          "#E0E0E0",
+          "#FFFFFF"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Dim Silver",
+        "canonical": "#B4B4B4",
+        "tonalRamp": [
+          "#000000",
+          "#1C1C1C",
+          "#444444",
+          "#6B6B6B",
+          "#949494",
+          "#B4B4B4",
+          "#E0E0E0",
+          "#FFFFFF"
+        ]
+      },
+      "progress": {
+        "role": "tertiary",
+        "displayName": "Progress Blue",
+        "canonical": "#3EA6FF",
+        "tonalRamp": [
+          "#04223F",
+          "#0A3A66",
+          "#11538F",
+          "#1A6FBD",
+          "#3EA6FF",
+          "#7CC2FF",
+          "#B5DCFF",
+          "#E6F3FF"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Library title, empty-library title, seek-readout delta (tabular)."
+      },
+      "headline-small": {
+        "displayName": "Headline Small",
+        "purpose": "Video title on the setup sheet."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sheet headings and the playback-error title."
+      },
+      "title-medium": {
+        "displayName": "Title Medium",
+        "purpose": "Library row titles, player top-bar title, loaded subtitle language names."
+      },
+      "title-small": {
+        "displayName": "Title Small",
+        "purpose": "Label of the primary Play / Resume pill."
+      },
+      "body-large": {
+        "displayName": "Body Large",
+        "purpose": "Settings rows, empty-state body, placeholder slot names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Helper copy, error body, hint pill, timing offset (tabular)."
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Row metadata and file names (tabular)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, scrubber times, speed readout (tabular), sentence-case section label."
+      },
+      "index-tab": {
+        "displayName": "Index Tab",
+        "purpose": "Two-letter language codes on edge tabs and the language switch; 18px at >=840dp, 11px on slot marks."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Caption text over the picture; 19px under 600dp, 24px to 1000dp, 30px above; white with black stroke."
+      }
+    },
+    "shadows": [
+      {
+        "name": "subtitle-outline",
+        "value": "5px round-joined stroke rgba(0,0,0,0.9) + 0 0 6px rgba(0,0,0,0.6)",
+        "purpose": "Subtitle text only, for legibility over any footage. Surfaces carry no shadows."
+      },
+      {
+        "name": "scrim-top",
+        "value": "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent) 140px",
+        "purpose": "Behind the player top bar while controls show."
+      },
+      {
+        "name": "scrim-bottom",
+        "value": "linear-gradient(to bottom, transparent, rgba(0,0,0,0.8)) 200px",
+        "purpose": "Behind the scrubber and bottom controls while controls show."
+      }
+    ],
+    "motion": [
+      {
+        "name": "tab-flip",
+        "value": "rotateX 90deg -> 0deg, 260ms, cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "The speaking edge tab turns over like a page tab on a language switch."
+      },
+      {
+        "name": "tab-reach",
+        "value": "translateX 10dp -> 0, 220ms, cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Active edge tab stands proud of the edge."
+      },
+      {
+        "name": "tab-color",
+        "value": "180-200ms linear",
+        "purpose": "Fill and text colour change on language tabs."
+      },
+      {
+        "name": "edge-tabs-enter-exit",
+        "value": "slide + fade 200ms in, 160ms out; held 1.4s after a switch",
+        "purpose": "Edge index stack appearance."
+      },
+      {
+        "name": "controls-fade",
+        "value": "fade 180ms in, 140ms out; auto-hide after 3s",
+        "purpose": "Player chrome."
+      },
+      {
+        "name": "subtitle-crossfade",
+        "value": "fade 160ms in, 90ms out",
+        "purpose": "Subtitle text when the language changes."
+      },
+      {
+        "name": "subtitle-lift",
+        "value": "bottom padding 28dp <-> 116dp, 220ms",
+        "purpose": "Subtitle clears the control bar while controls show."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "subtitle-md",
+        "value": "600dp"
+      },
+      {
+        "name": "expanded",
+        "value": "840dp"
+      },
+      {
+        "name": "subtitle-lg",
+        "value": "1000dp"
+      },
+      {
+        "name": "library-column-max",
+        "value": "720dp"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Inverted white pill with black text; the one main action (Play / Resume on the setup sheet).",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5.14v13.72a1 1 0 0 0 1.5.86l10.6-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z\" fill=\"currentColor\"/></svg><span>Resume from 1:08:20</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 320px; height: 56px; padding: 0 24px; background: #FFFFFF; color: #000000; border: none; border-radius: 9999px; font-family: Inter, sans-serif; font-size: 14px; font-weight: 600; line-height: 20px; font-feature-settings: 'tnum'; cursor: pointer; transition: background 0.15s; } .ds-btn-primary:hover { background: #E0E0E0; } .ds-btn-primary:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; } .ds-btn-primary:active { background: #B4B4B4; }"
+    },
+    {
+      "name": "Tonal Add Button",
+      "kind": "button",
+      "refersTo": "button-tonal",
+      "description": "Raised-grey pill with white text; adds a subtitle to an empty slot.",
+      "html": "<button class=\"ds-btn-tonal\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span>Add</span></button>",
+      "css": ".ds-btn-tonal { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 24px 0 16px; background: #2A2A2A; color: #FFFFFF; border: none; border-radius: 9999px; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; } .ds-btn-tonal:hover { background: #333333; } .ds-btn-tonal:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Edge Index Tabs",
+      "kind": "custom",
+      "refersTo": "edge-tab-active",
+      "description": "Signature: one tab per loaded language on the picture's right edge; the speaking tab inverted and flush, the idle one pulled in.",
+      "html": "<div class=\"ds-edge\"><div class=\"ds-edge-tab\">TR</div><div class=\"ds-edge-tab ds-edge-tab--active\">EN</div></div>",
+      "css": ".ds-edge { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 24px 0; background: linear-gradient(#3a3532, #1a1614); width: 120px; } .ds-edge-tab { width: 52px; height: 44px; display: flex; align-items: center; justify-content: center; padding-right: 4px; box-sizing: border-box; margin-right: -10px; border-radius: 10px 0 0 10px; background: #2A2A2A; color: #B4B4B4; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; transition: background 0.2s, color 0.2s, margin 0.22s cubic-bezier(0.4,0,0.2,1); } .ds-edge-tab:hover { color: #FFFFFF; } .ds-edge-tab--active { margin-right: 0; background: #FFFFFF; color: #000000; animation: ds-flip 0.26s cubic-bezier(0.4,0,0.2,1); } @keyframes ds-flip { from { transform: perspective(400px) rotateX(90deg); } to { transform: perspective(400px) rotateX(0); } } @media (prefers-reduced-motion: reduce) { .ds-edge-tab { transition: none; } .ds-edge-tab--active { animation: none; } }"
+    },
+    {
+      "name": "Language Switch",
+      "kind": "nav",
+      "refersTo": "language-switch",
+      "description": "Signature: the two language tabs side by side in the control bar; the visible equivalent of double-tap.",
+      "html": "<div class=\"ds-switch\" role=\"tablist\"><button class=\"ds-switch-tab ds-switch-tab--active\" role=\"tab\" aria-selected=\"true\">TR</button><button class=\"ds-switch-tab\" role=\"tab\" aria-selected=\"false\">EN</button></div>",
+      "css": ".ds-switch { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: rgba(17,17,17,0.8); } .ds-switch-tab { width: 52px; height: 42px; border: none; border-radius: 7px; background: transparent; color: #B4B4B4; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; cursor: pointer; transition: background 0.18s, color 0.18s; } .ds-switch-tab:hover { color: #FFFFFF; } .ds-switch-tab:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 1px; } .ds-switch-tab--active { background: #FFFFFF; color: #000000; } .ds-switch-tab--active:hover { color: #000000; }"
+    },
+    {
+      "name": "Slot Mark",
+      "kind": "chip",
+      "refersTo": "slot-mark-filled",
+      "description": "Small static language tab in library and slot rows; filled white when that language is speaking.",
+      "html": "<span class=\"ds-mark ds-mark--filled\">TR</span> <span class=\"ds-mark\">EN</span>",
+      "css": ".ds-mark { display: inline-flex; align-items: center; justify-content: center; padding: 3px 7px; border-radius: 5px; background: #2A2A2A; color: #B4B4B4; font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; } .ds-mark--filled { background: #FFFFFF; color: #000000; }"
+    },
+    {
+      "name": "Library Row",
+      "kind": "card",
+      "refersTo": "thumbnail",
+      "description": "Flat row on black: 8px-cornered 16:9 thumbnail with the blue watched bar, title, tabular metadata, language marks; no divider, separated by 14dp vertical padding.",
+      "html": "<div class=\"ds-row\"><div class=\"ds-thumb\"><div class=\"ds-thumb-bar\"><div class=\"ds-thumb-fill\"></div></div></div><div class=\"ds-row-text\"><div class=\"ds-row-title\">Kış Uykusu</div><div class=\"ds-row-meta\">3:16:00 · 34% watched</div><div class=\"ds-row-marks\"><span class=\"ds-mark ds-mark--filled\">TR</span><span class=\"ds-mark\">EN</span></div></div></div>",
+      "css": ".ds-row { display: flex; align-items: center; gap: 16px; padding: 14px 4px 14px 16px; background: #000000; width: 420px; cursor: pointer; } .ds-row:hover { background: #111111; } .ds-row:focus-visible { outline: 2px solid #FFFFFF; outline-offset: -2px; } .ds-thumb { position: relative; width: 128px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #1C1C1C; flex: none; } .ds-thumb-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,0.6); } .ds-thumb-fill { width: 34%; height: 100%; background: #3EA6FF; } .ds-row-text { display: flex; flex-direction: column; gap: 6px; font-family: Inter, sans-serif; } .ds-row-title { color: #FFFFFF; font-size: 16px; font-weight: 600; line-height: 24px; letter-spacing: -0.1px; } .ds-row-meta { color: #B4B4B4; font-size: 12px; line-height: 16px; font-feature-settings: 'tnum'; } .ds-row-marks { display: flex; gap: 6px; } .ds-mark { display: inline-flex; padding: 3px 7px; border-radius: 5px; background: #2A2A2A; color: #B4B4B4; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; } .ds-mark--filled { background: #FFFFFF; color: #000000; }"
+    },
+    {
+      "name": "Seek Readout",
+      "kind": "custom",
+      "refersTo": "seek-readout",
+      "description": "Translucent dark panel over the picture during drag-to-seek: signed delta over position / duration, tabular.",
+      "html": "<div class=\"ds-readout\"><div class=\"ds-readout-delta\">+0:24</div><div class=\"ds-readout-pos\">1:08:44 / 3:16:00</div></div>",
+      "css": ".ds-readout { display: inline-flex; flex-direction: column; align-items: center; padding: 14px 24px; border-radius: 16px; background: rgba(17,17,17,0.88); font-family: Inter, sans-serif; font-feature-settings: 'tnum'; } .ds-readout-delta { color: #FFFFFF; font-size: 28px; font-weight: 600; line-height: 36px; letter-spacing: -0.5px; } .ds-readout-pos { color: rgba(255,255,255,0.75); font-size: 14px; line-height: 20px; }"
+    },
+    {
+      "name": "Subtitle Line",
+      "kind": "custom",
+      "refersTo": "subtitle",
+      "description": "White semibold Inter caption with a black stroke and soft shadow, centred low over the picture.",
+      "html": "<div class=\"ds-sub-stage\"><p class=\"ds-sub\">Bunu sana daha önce de söylemiştim.</p></div>",
+      "css": ".ds-sub-stage { padding: 32px; background: linear-gradient(#6a5a4f, #1a1614); text-align: center; } .ds-sub { margin: 0; color: #FFFFFF; font-family: Inter, sans-serif; font-size: 19px; font-weight: 600; line-height: 1.25; text-shadow: 0 0 2px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.6); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Black Around the Film",
+    "overview": "Looplayer's ground is the black that surrounds a picture in a dark room. Nothing on screen competes with the video: surfaces rise out of the black by lightness alone, chrome is white glyphs over a gradient scrim, and a single hue (progress blue) is spent only on how far you are into something. The signature is a thumb index on the picture's edge: one tab per loaded subtitle language, the speaking one inverted to white and standing proud of the edge, flipping over like a page tab when a double-tap changes language.\n\nThe system is dark-only by decision. There is no light scheme and none should be added: the app is a cinema surface, and the theme (`LooplayerTheme`) wires only a `darkColorScheme`, with the window background also #000. Density is calm: generous row heights, one action per region, and controls that appear when asked for and leave after 3 s.\n\nType is Inter throughout, bundled with the app (Inter 4.1, SIL Open Font License 1.1; files `app/src/main/res/font/inter_{regular,medium,semibold,bold}.ttf`, license text at `app/src/main/assets/licenses/Inter-OFL.txt`). It was chosen for a professional, streaming-platform feel, full Turkish coverage and tabular figures. Dimensions in this file are dp and type sizes sp, written as px for portability.",
+    "keyCharacteristics": [
+      "True-black ground (#000) with tonal steps for surfaces; no borders, no divider lines, no drop shadows at rest.",
+      "The primary action is an inverted white pill with black text.",
+      "One hue, progress blue, reserved for watched progress.",
+      "Language marks are inverted-white when speaking, muted on a dark step when not, in every context (edge tabs, control-bar switch, list marks).",
+      "Inter everywhere, semibold for titles, tracking at zero or tightened, tabular figures on every time readout."
+    ],
+    "rules": [
+      {
+        "name": "The One Hue Rule",
+        "body": "Progress blue is spent only on how far into a video you are. Selection, focus and emphasis are expressed by inversion to white, never by colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Inversion Rule",
+        "body": "\"Active\" or \"primary\" means a white fill with black text. The speaking language, the main action, and the filled slot mark all use it; nothing else does.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Clock Rule",
+        "body": "Every time, duration, percentage, offset or line count uses tabular figures (`tnum`) so digits do not jitter while playing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Zero Tracking Rule",
+        "body": "Titles and headlines tighten (−0.1 to −0.5px); body and labels sit at zero. Only the language index codes are spaced (+0.4px). Material's default positive tracking does not return.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lightness Not Shadow Rule",
+        "body": "A surface that needs to sit above another gets a lighter grey step or a translucent dark panel, never a drop shadow or a border. Lists separate items by space, not lines.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the app dark-only: ground #000, surfaces as lighter greys, no light scheme.",
+      "Do mark the active or primary thing by inverting to a white fill with black text.",
+      "Do keep progress blue (#3EA6FF) on watched progress only.",
+      "Do use Inter from the bundled font files, and carry the Inter OFL license with any build that ships them.",
+      "Do set every time, duration, count and offset in tabular figures.",
+      "Do give every gesture a visible control (the language switch, ±10 s buttons) with a content description and a 48dp target.",
+      "Do keep subtitles white with the black stroke and soft shadow.",
+      "Do respect Remove animations: the tab flip, slides and fades must resolve instantly when animations are off."
+    ],
+    "donts": [
+      "Don't put drop shadows, outlines or divider lines on surfaces at rest; use a lighter grey step, a translucent dark panel, or spacing.",
+      "Don't introduce a second accent hue, or colour-code the two subtitle languages; slots differ by position and inversion, not by ink.",
+      "Don't make an overlay on the picture brighter than the picture's chrome; notices sit on 88% dark panels.",
+      "Don't restore Material's default positive letter-spacing on body and labels.",
+      "Don't substitute a system or downloadable font for the bundled Inter."
+    ]
+  }
+}
