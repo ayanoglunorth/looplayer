@@ -22,6 +22,7 @@ import app.looplayer.subtitle.Cue
 import app.looplayer.subtitle.DualSubtitles
 import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.SubtitleTrack
+import app.looplayer.ui.player.Controls
 import app.looplayer.ui.player.PlayerGestureHandler
 import app.looplayer.ui.player.SubtitleLine
 import app.looplayer.ui.player.playerGestures
@@ -112,6 +113,37 @@ class PlayerGesturesTest {
         rule.onNodeWithTag("surface").performTouchInput { swipeUp() }
         settle()
         assertEquals(0, seekStarts)
+        assertEquals(0, taps)
+    }
+
+    @Test
+    @org.robolectric.annotation.Config(qualifiers = "w851dp-h393dp-land")
+    fun `double tap still reaches the picture through the visible controls overlay`() {
+        rule.setContent {
+            Box(Modifier.size(851.dp, 393.dp)) {
+                Box(
+                    Modifier.matchParentSize().testTag("surface").playerGestures(
+                        PlayerGestureHandler(
+                            onTap = { taps++ }, onDoubleTap = { doubleTaps++ },
+                            onSeekStart = { seekStarts++ }, onSeek = { _, _ -> }, onSeekEnd = { seekEnds++ }, onSeekCancel = {},
+                        ),
+                    ),
+                )
+                Controls(
+                    title = "x", isPlaying = true, buffering = false, position = { 0 }, durationMs = 60_000,
+                    speed = 1f, zoom = false, marks = mapOf(Slot.A to "TR", Slot.B to "EN"), active = Slot.A,
+                    onBack = {}, onPlayPause = {}, onSkip = {}, onScrub = {}, onScrubEnd = {}, onSpeed = {},
+                    onZoom = {}, onSelectLanguage = {}, onOpenSubtitles = {},
+                )
+            }
+        }
+        // An empty spot left of centre, between the top bar and the transport buttons.
+        rule.onNodeWithTag("surface").performTouchInput { doubleClick(androidx.compose.ui.geometry.Offset(width * 0.2f, height * 0.3f)) }
+        settle()
+        assertEquals(1, doubleTaps)
+        rule.onNodeWithTag("surface").performTouchInput { swipeRight(startX = width * 0.2f, endX = width * 0.6f) }
+        settle()
+        assertEquals(1, seekEnds)
     }
 
     @Test

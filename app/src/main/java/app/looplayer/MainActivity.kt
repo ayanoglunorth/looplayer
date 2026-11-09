@@ -17,6 +17,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,8 +73,8 @@ private fun App(incoming: Uri?, onIncomingHandled: () -> Unit) {
     var session by remember { mutableStateOf<SubtitleSession?>(null) }
     var pendingSlot by remember { mutableStateOf(Slot.A) }
 
-    fun open(entry: VideoEntry, then: Screen) {
-        val s = SubtitleSession(resolver, store, entry)
+    fun open(entry: VideoEntry, then: Screen, persist: Boolean = true) {
+        val s = SubtitleSession(resolver, store, entry, persist)
         s.touch()
         session = s
         screen = then
@@ -81,10 +82,11 @@ private fun App(incoming: Uri?, onIncomingHandled: () -> Unit) {
     }
 
     fun openUri(uri: Uri, then: Screen) {
-        Files.takePermission(resolver, uri)
+        val kept = Files.takePermission(resolver, uri)
         val key = uri.toString()
         val entry = store.find(key) ?: VideoEntry(uri = key, title = Files.titleFrom(Files.displayName(resolver, uri)))
-        open(entry, then)
+        // A temporary "Open with" grant can't be reopened from the library later, so it isn't stored.
+        open(entry, then, persist = kept || store.find(key) != null)
     }
 
     LaunchedEffect(incoming) {
@@ -119,11 +121,14 @@ private fun App(incoming: Uri?, onIncomingHandled: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         val current = session
         if (screen == Screen.Player && current != null) {
-            PlayerScreen(
-                session = current,
-                onPickSubtitle = chooseSubtitle,
-                onExit = { screen = Screen.Library },
-            )
+            // Keyed on the session: opening another video must build a fresh player, never reuse the old one.
+            key(current) {
+                PlayerScreen(
+                    session = current,
+                    onPickSubtitle = chooseSubtitle,
+                    onExit = { screen = Screen.Library },
+                )
+            }
         } else {
             LibraryScreen(
                 entries = store.entries,
@@ -144,7 +149,7 @@ private fun App(incoming: Uri?, onIncomingHandled: () -> Unit) {
                             actionLabel = context.getString(R.string.undo),
                             duration = SnackbarDuration.Short,
                         )
-                        if (result == SnackbarResult.ActionPerformed) store.upsert(entry)
+                        if (result == SnackbarResult.ActionPerformed) store.upsert(entry) else Files.releasePermissions(resolver, entry)
                     }
                 },
             )

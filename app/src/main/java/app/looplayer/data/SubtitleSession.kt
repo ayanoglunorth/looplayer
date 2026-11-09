@@ -19,6 +19,8 @@ class SubtitleSession(
     private val resolver: ContentResolver,
     private val store: LibraryStore,
     initial: VideoEntry,
+    /** False for videos we can't reopen later (temporary grants): nothing is written to the library. */
+    private val persist: Boolean = true,
 ) {
     var entry by mutableStateOf(initial)
         private set
@@ -112,6 +114,6 @@ class SubtitleSession(
 
     private fun update(next: VideoEntry) {
         entry = next
-        store.upsert(next)
+        if (persist) store.upsert(next)
     }
 }

@@ -36,6 +36,12 @@ data class SubtitleTrack(
 ) {
     private val sorted: List<Cue> by lazy { cues.sortedBy { it.startMs } }
 
+    /** maxEndUpTo[i] = latest end among cues 0..i, so long cues under many short ones are never missed. */
+    private val maxEndUpTo: LongArray by lazy {
+        var max = Long.MIN_VALUE
+        LongArray(sorted.size) { i -> max = maxOf(max, sorted[i].endMs); max }
+    }
+
     /** Text of every cue showing at [positionMs], or null when nothing is on screen. */
     fun textAt(positionMs: Long): String? {
         val t = positionMs - offsetMs
@@ -53,9 +59,9 @@ data class SubtitleTrack(
         }
         if (last < 0) return null
         val active = ArrayList<String>(2)
-        // Overlaps are rare and short; scan back a bounded window.
+        // Walk back only while some earlier cue could still be running (its prefix-max end is past t).
         var i = last
-        while (i >= 0 && last - i < 32) {
+        while (i >= 0 && maxEndUpTo[i] > t) {
             val cue = sorted[i]
             if (t < cue.endMs) active.add(cue.text)
             i--

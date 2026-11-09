@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,14 +80,18 @@ fun LibraryScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.library_title)) },
-                scrollBehavior = scroll,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-            )
+            // Same 720dp column as the list, so heading and rows share one left edge on tablets.
+            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.TopCenter) {
+                LargeTopAppBar(
+                    title = { Text(stringResource(R.string.library_title)) },
+                    scrollBehavior = scroll,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.background,
+                    ),
+                    modifier = Modifier.widthIn(max = ContentMaxWidth),
+                )
+            }
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -109,7 +113,7 @@ fun LibraryScreen(
                     top = padding.calculateTopPadding(),
                     bottom = padding.calculateBottomPadding() + 96.dp,
                 ),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().wrapContentWidth().widthIn(max = ContentMaxWidth),
             ) {
                 items(entries, key = { it.uri }) { entry ->
                     VideoRow(entry, onClick = { onSelect(entry) }, onRemove = { onRemove(entry) }, modifier = Modifier.animateItem())
@@ -121,6 +125,7 @@ fun LibraryScreen(
 }
 
 private val ThumbWidth = 128.dp
+private val ContentMaxWidth = 720.dp
 
 @Composable
 private fun VideoRow(entry: VideoEntry, onClick: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
@@ -211,12 +216,6 @@ fun Thumbnail(entry: VideoEntry, modifier: Modifier = Modifier) {
 private fun EmptyLibrary(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize().padding(horizontal = 32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.Start, modifier = Modifier.widthIn(max = 420.dp).animateContentSize()) {
-            // The two editions, as they will appear on the edge of the picture.
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SlotMark("TR", Slot.A, filled = true, modifier = Modifier.size(width = 52.dp, height = 32.dp))
-                SlotMark("EN", Slot.B, filled = false, modifier = Modifier.size(width = 52.dp, height = 32.dp))
-            }
-            Spacer(Modifier.height(20.dp))
             Text(stringResource(R.string.empty_title), style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(10.dp))
             Text(

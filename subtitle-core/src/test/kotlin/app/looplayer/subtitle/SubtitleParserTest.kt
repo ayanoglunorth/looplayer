@@ -78,4 +78,22 @@ class SubtitleParserTest {
         assertEquals(SubtitleFormat.ASS, SubtitleFormat.sniff("[Script Info]\n"))
         assertEquals(SubtitleFormat.SRT, SubtitleFormat.sniff("1\n00:00:01,000 --> 00:00:02,000\nx"))
     }
+
+    @Test
+    fun `srt cues without a blank line between them are not merged`() {
+        val srt = "1\n00:00:01,000 --> 00:00:02,000\nFirst\n2\n00:00:03,000 --> 00:00:04,000\nSecond\n"
+        assertEquals(listOf(Cue(1_000, 2_000, "First"), Cue(3_000, 4_000, "Second")), SubtitleParser.parse(srt, SubtitleFormat.SRT))
+    }
+
+    @Test
+    fun `only real markup tags are stripped, not text that looks like one`() {
+        val srt = "1\n00:00:01,000 --> 00:00:02,000\n<font color=\"#fff\">I <3 you</font>, a < b > c\n"
+        assertEquals("I <3 you, a < b > c", SubtitleParser.parse(srt, SubtitleFormat.SRT).single().text)
+    }
+
+    @Test
+    fun `ass without start, end or text columns yields nothing instead of throwing`() {
+        val ass = "[Events]\nFormat: Layer, Style\nDialogue: 0,Default\n"
+        assertEquals(emptyList(), SubtitleParser.parse(ass, SubtitleFormat.ASS))
+    }
 }

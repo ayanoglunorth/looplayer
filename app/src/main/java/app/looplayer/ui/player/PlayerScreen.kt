@@ -40,8 +40,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.AspectRatio
-import androidx.compose.material.icons.rounded.Crop
+import androidx.compose.material.icons.rounded.FitScreen
+import androidx.compose.material.icons.rounded.ZoomOutMap
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -230,6 +230,7 @@ fun PlayerScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) {
                 player.pause()
+                controlsVisible = true
                 session.savePosition(player.currentPosition, player.duration)
             }
         }
@@ -378,25 +379,7 @@ fun PlayerScreen(
 
         // Drag-to-seek readout.
         seekPreview?.let { target ->
-            Column(
-                Modifier
-                    .align(Alignment.Center)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xCC0F0E0D))
-                    .padding(horizontal = 24.dp, vertical = 14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    TimeFormat.formatDelta(target - seekFrom),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = TabularNumbers),
-                    color = Color.White,
-                )
-                Text(
-                    "${TimeFormat.format(target)} / ${TimeFormat.format(durationMs)}",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularNumbers),
-                    color = Color.White.copy(alpha = 0.75f),
-                )
-            }
+            SeekReadout(target, seekFrom, durationMs, Modifier.align(Alignment.Center))
         }
 
         AnimatedVisibility(
@@ -408,7 +391,7 @@ fun PlayerScreen(
                 title = session.entry.title,
                 isPlaying = isPlaying,
                 buffering = buffering,
-                positionMs = sliderDrag?.toLong() ?: positionMs,
+                position = { sliderDrag?.toLong() ?: positionMs },
                 durationMs = durationMs,
                 speed = speed,
                 zoom = zoom,
@@ -457,45 +440,41 @@ fun PlayerScreen(
         ) {
             val last = remember { mutableIntStateOf(R.string.only_one_subtitle) }
             hint?.let { last.intValue = it }
-            Text(
-                stringResource(last.intValue),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
-                modifier = Modifier
-                    .widthIn(max = 420.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            )
+            HintPill(stringResource(last.intValue))
         }
 
         error?.let { PlaybackError(onExit, Modifier.align(Alignment.Center)) }
     }
 
-    if (sheetOpen) {
-        ModalBottomSheet(
-            onDismissRequest = { sheetOpen = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    if (sheetOpen) PlayerSubtitleSheet(session, onPickSubtitle, onDismiss = { sheetOpen = false })
+}
+
+/** The subtitles sheet opened from the player's top bar. */
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun PlayerSubtitleSheet(session: SubtitleSession, onPickSubtitle: (Slot) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 16.dp),
         ) {
-            Column(
-                Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp)
-                    .navigationBarsPadding()
-                    .padding(bottom = 16.dp),
-            ) {
-                Text(stringResource(R.string.subtitles), style = MaterialTheme.typography.titleLarge)
-                SubtitleSlots(
-                    slots = Slot.entries.associateWith { SlotUi(session.entry.sub(it), session.tracks[it], it in session.loading) },
-                    active = dual.active,
-                    visible = session.visible,
-                    onPick = onPickSubtitle,
-                    onRemove = session::remove,
-                    onOffset = session::shift,
-                    onVisibleChange = { session.visible = it },
-                )
-            }
+            Text(stringResource(R.string.subtitles), style = MaterialTheme.typography.titleLarge)
+            SubtitleSlots(
+                slots = Slot.entries.associateWith { SlotUi(session.entry.sub(it), session.tracks[it], it in session.loading) },
+                active = session.dual.active,
+                visible = session.visible,
+                onPick = onPickSubtitle,
+                onRemove = session::remove,
+                onOffset = session::shift,
+                onVisibleChange = { session.visible = it },
+            )
         }
     }
 }
@@ -537,7 +516,7 @@ internal fun Controls(
     title: String,
     isPlaying: Boolean,
     buffering: Boolean,
-    positionMs: Long,
+    position: () -> Long,
     durationMs: Long,
     speed: Float,
     zoom: Boolean,
@@ -614,35 +593,7 @@ internal fun Controls(
             }
 
             // Bottom: scrubber with times, then the language switch and picture fit.
-            val seekLabel = stringResource(R.string.seek_position)
-            val scrubColors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Color.White,
-                inactiveTrackColor = Color.White.copy(alpha = 0.28f),
-            )
-            val timeStyle = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TabularNumbers, color = Color.White)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp)) {
-                Text(TimeFormat.format(positionMs), style = timeStyle, modifier = Modifier.widthIn(min = 52.dp))
-                Slider(
-                    value = positionMs.toFloat().coerceIn(0f, durationMs.coerceAtLeast(1).toFloat()),
-                    onValueChange = onScrub,
-                    onValueChangeFinished = onScrubEnd,
-                    valueRange = 0f..durationMs.coerceAtLeast(1).toFloat(),
-                    colors = scrubColors,
-                    track = { state ->
-                        SliderDefaults.Track(
-                            sliderState = state,
-                            colors = scrubColors,
-                            modifier = Modifier.height(4.dp),
-                            thumbTrackGapSize = 0.dp,
-                            drawStopIndicator = null,
-                        )
-                    },
-                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
-                        .semantics { contentDescription = seekLabel },
-                )
-                Text(TimeFormat.format(durationMs), style = timeStyle, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 52.dp))
-            }
+            ScrubberRow(position, durationMs, onScrub, onScrubEnd)
             Row(
                 Modifier.fillMaxWidth().padding(start = 8.dp, end = 0.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -657,7 +608,7 @@ internal fun Controls(
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onZoom) {
                     Icon(
-                        if (zoom) Icons.Rounded.AspectRatio else Icons.Rounded.Crop,
+                        if (zoom) Icons.Rounded.FitScreen else Icons.Rounded.ZoomOutMap,
                         contentDescription = stringResource(if (zoom) R.string.fit_picture else R.string.fill_picture),
                         tint = Color.White,
                     )
@@ -701,7 +652,7 @@ private fun speedLabel(s: Float): String =
     (if (s % 1f == 0f) s.toInt().toString() else s.toString().trimEnd('0')) + "×"
 
 @Composable
-private fun PlaybackError(onBack: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PlaybackError(onBack: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(stringResource(R.string.playback_error), style = MaterialTheme.typography.titleLarge, color = Color.White)
         Spacer(Modifier.height(16.dp))
@@ -717,3 +668,76 @@ private fun Context.findActivity(): Activity? {
     }
     return null
 }
+
+/** The drag-to-seek readout: the signed jump, and where it lands. */
+@Composable
+internal fun SeekReadout(targetMs: Long, fromMs: Long, durationMs: Long, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xCC0F0E0D))
+            .padding(horizontal = 24.dp, vertical = 14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            TimeFormat.formatDelta(targetMs - fromMs),
+            style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = TabularNumbers),
+            color = Color.White,
+        )
+        Text(
+            "${TimeFormat.format(targetMs)} / ${TimeFormat.format(durationMs)}",
+            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularNumbers),
+            color = Color.White.copy(alpha = 0.75f),
+        )
+    }
+}
+
+/** A short notice over the picture, e.g. when a double-tap has no second language to flip to. */
+@Composable
+internal fun HintPill(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
+        modifier = modifier
+            .widthIn(max = 420.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    )
+}
+
+/** Its own composable so the 25-per-second clock only recomposes this row, not the whole overlay. */
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScrubberRow(position: () -> Long, durationMs: Long, onScrub: (Float) -> Unit, onScrubEnd: () -> Unit) {
+    val positionMs = position()
+    val seekLabel = stringResource(R.string.seek_position)
+    val scrubColors = SliderDefaults.colors(
+        thumbColor = Color.White,
+        activeTrackColor = Color.White,
+        inactiveTrackColor = Color.White.copy(alpha = 0.28f),
+    )
+    val timeStyle = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TabularNumbers, color = Color.White)
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp)) {
+        Text(TimeFormat.format(positionMs), style = timeStyle, modifier = Modifier.widthIn(min = 52.dp))
+        Slider(
+            value = positionMs.toFloat().coerceIn(0f, durationMs.coerceAtLeast(1).toFloat()),
+            onValueChange = onScrub,
+            onValueChangeFinished = onScrubEnd,
+            valueRange = 0f..durationMs.coerceAtLeast(1).toFloat(),
+            colors = scrubColors,
+            track = { state ->
+                SliderDefaults.Track(
+                    sliderState = state,
+                    colors = scrubColors,
+                    modifier = Modifier.height(4.dp),
+                    thumbTrackGapSize = 0.dp,
+                    drawStopIndicator = null,
+                )
+            },
+            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                .semantics { contentDescription = seekLabel },
+        )
+        Text(TimeFormat.format(durationMs), style = timeStyle, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 52.dp))
+    }}

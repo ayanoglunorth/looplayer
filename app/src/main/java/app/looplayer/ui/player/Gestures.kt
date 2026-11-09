@@ -2,6 +2,7 @@ package app.looplayer.ui.player
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -42,5 +43,9 @@ fun Modifier.playerGestures(handler: PlayerGestureHandler): Modifier {
                 onDragEnd = { h.onSeekEnd() },
                 onDragCancel = { h.onSeekCancel() },
             )
+        }
+        // Vertical swipes do nothing yet, but they must not end as a tap that toggles the controls.
+        .pointerInput(Unit) {
+            detectVerticalDragGestures { change, _ -> change.consume() }
         }
 }

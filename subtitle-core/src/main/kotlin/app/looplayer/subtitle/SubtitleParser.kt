@@ -27,7 +27,8 @@ object SubtitleParser {
             }
             i++
             val body = StringBuilder()
-            while (i < lines.size && lines[i].isNotBlank()) {
+            // A cue ends at a blank line, or where a sloppy file starts the next cue without one.
+            while (i < lines.size && lines[i].isNotBlank() && !startsCue(lines, i)) {
                 if (body.isNotEmpty()) body.append('\n')
                 body.append(lines[i].trim())
                 i++
@@ -36,6 +37,10 @@ object SubtitleParser {
         }
         return out
     }
+
+    private fun startsCue(lines: List<String>, i: Int): Boolean =
+        arrow.containsMatchIn(lines[i]) ||
+            (lines[i].trim().all { it.isDigit() } && i + 1 < lines.size && arrow.containsMatchIn(lines[i + 1]))
 
     /** Accepts hh:mm:ss,mmm / hh:mm:ss.mmm / mm:ss.mmm (VTT short form). */
     private fun parseClock(raw: String): Long? {
@@ -50,7 +55,8 @@ object SubtitleParser {
         return ((h * 60 + m) * 60 + s) * 1000 + ms
     }
 
-    private val tag = Regex("<[^>]*>")
+    // Only markup subtitle formats actually use: i/b/u/s, font, ruby, and WebVTT class, voice, lang and timestamp tags.
+    private val tag = Regex("""</?(?:[ibus]|font|ruby|rt|c|v|lang)(?:[.\s][^>]*)?>|<\d{1,2}:\d{2}(?::\d{2})?\.\d{3}>""", RegexOption.IGNORE_CASE)
     private val assOverride = Regex("""\{[^}]*\}""")
 
     private fun cleanMarkup(s: String): String =
@@ -77,10 +83,13 @@ object SubtitleParser {
                 trimmed.startsWith("Dialogue:", ignoreCase = true) -> {
                     // Text is the last field and may itself contain commas.
                     val values = trimmed.substringAfter(':').trimStart().split(',', limit = fields.size)
-                    if (values.size < fields.size) continue
-                    val start = parseAssClock(values[fields.indexOf("Start")]) ?: continue
-                    val end = parseAssClock(values[fields.indexOf("End")]) ?: continue
-                    val raw = values[fields.indexOf("Text")]
+                    val startAt = fields.indexOf("Start")
+                    val endAt = fields.indexOf("End")
+                    val textAt = fields.indexOf("Text")
+                    if (values.size < fields.size || startAt < 0 || endAt < 0 || textAt < 0) continue
+                    val start = parseAssClock(values[startAt]) ?: continue
+                    val end = parseAssClock(values[endAt]) ?: continue
+                    val raw = values[textAt]
                         .replace("\\N", "\n").replace("\\n", "\n").replace("\\h", " ")
                     out += Cue(start, end, cleanMarkup(raw))
                 }

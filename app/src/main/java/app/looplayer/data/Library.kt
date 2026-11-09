@@ -115,8 +115,15 @@ class LibraryStore(context: Context) {
 /** File access through the Storage Access Framework: names, persisted grants, subtitle reading. */
 object Files {
 
-    fun takePermission(resolver: ContentResolver, uri: Uri) {
-        runCatching { resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+    /** Keeps read access across restarts; false when the grant was only temporary (e.g. "Open with"). */
+    fun takePermission(resolver: ContentResolver, uri: Uri): Boolean =
+        runCatching { resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }.isSuccess
+
+    /** Gives back persisted grants for a removed entry; Android caps how many an app may hold. */
+    fun releasePermissions(resolver: ContentResolver, entry: VideoEntry) {
+        listOfNotNull(entry.uri, entry.subA?.uri, entry.subB?.uri).forEach { u ->
+            runCatching { resolver.releasePersistableUriPermission(Uri.parse(u), Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        }
     }
 
     fun displayName(resolver: ContentResolver, uri: Uri): String {
@@ -125,7 +132,7 @@ object Files {
                 if (c.moveToFirst()) c.getString(0) else null
             }
         }.getOrNull()
-        return fromProvider ?: uri.lastPathSegment?.substringAfterLast('/') ?: uri.toString()
+        return fromProvider ?: (uri.lastPathSegment ?: uri.toString()).substringAfterLast('/').substringAfterLast('\\')
     }
 
     fun titleFrom(fileName: String) = fileName.substringBeforeLast('.').replace('.', ' ').replace('_', ' ').trim()
@@ -181,5 +188,5 @@ fun languageName(code: String?): String? = code?.let {
         .takeIf { name -> name.isNotBlank() && name != it }
 }
 
-/** Two-letter tab mark for a slot: the language code, or the slot letter when unknown. */
-fun tabMark(ref: SubtitleRef?, slot: Slot): String = ref?.language?.uppercase() ?: slot.name
+/** Tab mark for a slot: the language code, or the slot number when the language is unknown. */
+fun tabMark(ref: SubtitleRef?, slot: Slot): String = ref?.language?.uppercase() ?: if (slot == Slot.A) "1" else "2"

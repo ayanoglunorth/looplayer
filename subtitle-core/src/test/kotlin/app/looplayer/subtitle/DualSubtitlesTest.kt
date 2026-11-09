@@ -83,4 +83,13 @@ class DualSubtitlesTest {
         assertNull(hidden.textAt(1_500))
         assertEquals("Hello", hidden.copy(visible = true).textAt(1_500))
     }
+
+    @Test
+    fun `a long cue stays visible while many short cues pass under it`() {
+        val sign = Cue(0, 100_000, "SIGN")
+        val shorts = List(50) { Cue(1_000L + it * 1_000, 1_000L + it * 1_000 + 500, "line $it") }
+        val track = SubtitleTrack("x", null, listOf(sign) + shorts)
+        assertEquals("SIGN", track.textAt(45_800))
+        assertEquals("SIGN\nline 44", track.textAt(45_200))
+    }
 }
