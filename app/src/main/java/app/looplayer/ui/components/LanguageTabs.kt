@@ -64,7 +64,7 @@ fun EdgeIndexTabs(
                     flip.animateTo(0f, tween(260, easing = FastOutSlowInEasing))
                 }
             }
-            val fill by animateColorAsState(if (isActive) Palette.Text else Palette.Surface.copy(alpha = 0.85f), tween(200), label = "fill")
+            val fill by animateColorAsState(if (isActive) Palette.Text else Palette.Raised, tween(200), label = "fill")
             val text by animateColorAsState(if (isActive) Palette.Ground else Palette.Muted, tween(200), label = "text")
             Box(
                 Modifier

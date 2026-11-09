@@ -31,7 +31,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -118,7 +117,6 @@ fun LibraryScreen(
             ) {
                 items(entries, key = { it.uri }) { entry ->
                     VideoRow(entry, onClick = { onSelect(entry) }, onRemove = { onRemove(entry) }, modifier = Modifier.animateItem())
-                    HorizontalDivider(Modifier.padding(start = 16.dp + ThumbWidth + 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
         }
@@ -135,7 +133,7 @@ private fun VideoRow(entry: VideoEntry, onClick: () -> Unit, onRemove: () -> Uni
         modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
+            .padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Thumbnail(entry, Modifier.width(ThumbWidth))
