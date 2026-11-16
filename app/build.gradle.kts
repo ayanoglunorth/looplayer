@@ -14,6 +14,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        // Phones only: the Python and ffmpeg bundles are tens of MB per ABI.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     buildTypes {
@@ -48,7 +50,6 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 

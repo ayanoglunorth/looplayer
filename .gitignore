@@ -6,3 +6,5 @@ local.properties
 .kotlin/
 captures/
 .impeccable/review/
+dist/
+.taste-skill/

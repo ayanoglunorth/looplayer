@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,8 @@ fun EdgeIndexTabs(
     modifier: Modifier = Modifier,
     /** Expanded widths: the confirmation must still read at arm's length on a tablet. */
     large: Boolean = false,
+    /** Off: the tab changes in place, no slide and no flip. */
+    animate: Boolean = true,
 ) {
     val tabWidth = if (large) 76.dp else 52.dp
     val tabHeight = if (large) 60.dp else 44.dp
@@ -56,16 +59,16 @@ fun EdgeIndexTabs(
         Slot.entries.forEach { slot ->
             val mark = marks[slot] ?: return@forEach
             val isActive = slot == active
-            val reach by animateDpAsState(if (isActive) 0.dp else 10.dp, tween(220, easing = FastOutSlowInEasing), label = "reach")
+            val reach by animateDpAsState(if (isActive) 0.dp else 10.dp, if (animate) tween(220, easing = FastOutSlowInEasing) else snap(), label = "reach")
             val flip = remember { Animatable(0f) }
             LaunchedEffect(isActive) {
-                if (isActive) {
+                if (isActive && animate) {
                     flip.snapTo(90f)
                     flip.animateTo(0f, tween(260, easing = FastOutSlowInEasing))
                 }
             }
-            val fill by animateColorAsState(if (isActive) Palette.Text else Palette.Raised, tween(200), label = "fill")
-            val text by animateColorAsState(if (isActive) Palette.Ground else Palette.Muted, tween(200), label = "text")
+            val fill by animateColorAsState(if (isActive) Palette.Text else Palette.Raised, if (animate) tween(200) else snap(), label = "fill")
+            val text by animateColorAsState(if (isActive) Palette.Ground else Palette.Muted, if (animate) tween(200) else snap(), label = "text")
             Box(
                 Modifier
                     .offset(x = reach)

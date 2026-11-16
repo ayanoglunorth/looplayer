@@ -22,6 +22,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import app.looplayer.R
 import app.looplayer.data.LibraryStore
+import app.looplayer.data.DeviceFolder
+import app.looplayer.data.DeviceVideo
 import app.looplayer.data.SubtitleRef
 import app.looplayer.data.SubtitleSession
 import app.looplayer.data.VideoEntry
@@ -39,6 +41,8 @@ import app.looplayer.ui.player.PlaybackError
 import app.looplayer.ui.player.PlayerSubtitleSheet
 import app.looplayer.ui.player.SeekReadout
 import app.looplayer.ui.player.SubtitleLine
+import app.looplayer.ui.settings.SettingsSheet
+import app.looplayer.data.SettingsStore
 import app.looplayer.ui.theme.LooplayerTheme
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import kotlinx.coroutines.runBlocking
@@ -68,8 +72,8 @@ class ScreenshotTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun shot(name: String, content: @Composable () -> Unit) {
-        rule.setContent { LooplayerTheme { content() } }
+    private fun shot(name: String, dark: Boolean = true, content: @Composable () -> Unit) {
+        rule.setContent { LooplayerTheme(dark) { content() } }
         rule.mainClock.advanceTimeBy(1_000)
         rule.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/$name.png")
@@ -79,6 +83,11 @@ class ScreenshotTest {
 
     @Test @Config(qualifiers = PHONE) fun phone_library_empty() = shot("phone-library_empty") { emptyLibrary() }
     @Test @Config(qualifiers = PHONE) fun phone_library_list() = shot("phone-library_list") { library() }
+    @Test @Config(qualifiers = PHONE) fun phone_library_list_light() = shot("phone-library_list_light", dark = false) { library() }
+    @Test @Config(qualifiers = PHONE) fun phone_settings_sheet_light() =
+        shot("phone-settings_sheet_light", dark = false) { library(); SettingsSheet(SettingsStore(RuntimeEnvironment.getApplication()), {}) }
+    @Test @Config(qualifiers = PHONE) fun phone_subtitle_style_sheet() =
+        shot("phone-subtitle_style_sheet") { library(); app.looplayer.ui.settings.SubtitleStyleSheet(SettingsStore(RuntimeEnvironment.getApplication()), {}) }
     @Test @Config(qualifiers = TABLET) fun tablet_library_empty() = shot("tablet-library_empty") { emptyLibrary() }
     @Test @Config(qualifiers = TABLET) fun tablet_library_list() = shot("tablet-library_list") { library() }
     @Test @Config(qualifiers = PHONE, fontScale = 1.3f) fun phone_library_empty_fs130() = shot("phone-library_empty-fs130") { emptyLibrary() }
@@ -107,6 +116,22 @@ class ScreenshotTest {
     fun phone_player_subtitle_sheet() {
         val session = sessionWithRealSubtitles()
         shot("phone-player_subtitle_sheet") { FakeFrame { }; PlayerSubtitleSheet(session, {}, {}) }
+    }
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_settings_sheet() =
+        shot("phone-settings_sheet") { library(); SettingsSheet(SettingsStore(RuntimeEnvironment.getApplication()), {}) }
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_subtitle_fonts() = shot("phone-subtitle_fonts") {
+        androidx.compose.foundation.layout.Column(
+            Modifier.fillMaxSize().background(Color(0xFF6B7785)).padding(16.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+        ) {
+            app.looplayer.data.SubtitleFont.entries.forEach { f ->
+                SubtitleLine("${f.name}: Ağır çaylar, İstanbul'da şöyle üşür.", app.looplayer.data.AppSettings(font = f, sizePercent = 90))
+            }
+        }
     }
 
     // ---- Player --------------------------------------------------------------------------
@@ -165,9 +190,15 @@ class ScreenshotTest {
         VideoEntry(uri = "content://sample/4", title = "Ev videosu 2019", durationMs = 412_000, lastOpened = now - 3),
     )
 
-    @Composable private fun emptyLibrary() = LibraryScreen(emptyList(), SnackbarHostState(), {}, {}, {})
+    @Composable private fun emptyLibrary() = LibraryScreen(emptyList(), SnackbarHostState(), {}, {}, {}, hasAccess = false)
 
-    @Composable private fun library() = LibraryScreen(samples, SnackbarHostState(), {}, {}, {})
+    private val folders = listOf(
+        DeviceFolder(1, "Movies", listOf(DeviceVideo("content://sample/1", "Kış Uykusu", 11_760_000, 1, 5), DeviceVideo("content://sample/2", "Before Sunrise", 6_060_000, 1, 4))),
+        DeviceFolder(2, "Download", listOf(DeviceVideo("content://sample/3", "Amélie", 7_320_000, 1, 3))),
+        DeviceFolder(3, "Camera", List(24) { DeviceVideo("content://cam/$it", "VID_$it", 30_000, 1, 2) }),
+    )
+
+    @Composable private fun library() = LibraryScreen(samples, SnackbarHostState(), {}, {}, {}, folders = folders)
 
     @Composable
     private fun slots() = Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxSize()) {

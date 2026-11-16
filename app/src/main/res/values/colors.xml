@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="night_ink">#FF000000</color>
-    <color name="tab_active">#FFFFFFFF</color>
-    <color name="tab_idle">#FF6B6B6B</color>
+    <color name="layer_back">#FF3EA6FF</color>
     <color name="paper">#FFFFFFFF</color>
+    <color name="warm_ground">#FF16130F</color>
 </resources>

@@ -50,4 +50,121 @@
     <string name="unlock_rotation">Ekran yönü kilidini aç</string>
     <string name="playback_error_body">Dosya taşınmış ya da bu cihazın oynatamadığı bir biçimde olabilir.</string>
     <string name="choose_another">Başka video seç</string>
+
+    <!-- Settings -->
+    <string name="settings">Ayarlar</string>
+    <string name="more_options">Diğer seçenekler</string>
+    <string name="section_player">Oynatıcı</string>
+    <string name="language_indicator">Dil göstergesi</string>
+    <string name="language_indicator_body">Dil değişince sağ kenarda kısa bir işaret çıkar.</string>
+    <string name="swipe_adjust">Kaydırarak parlaklık ve ses</string>
+    <string name="swipe_adjust_body">Solda yukarı ya da aşağı kaydır: parlaklık. Sağda: ses.</string>
+    <string name="section_subtitle_style">Altyazı stili</string>
+    <string name="font">Yazı tipi</string>
+    <string name="font_inter">Inter</string>
+    <string name="font_roboto">Roboto</string>
+    <string name="font_atkinson">Atkinson Hyperlegible</string>
+    <string name="font_open_sans">Open Sans</string>
+    <string name="font_pt_narrow">PT Sans Narrow</string>
+    <string name="font_inconsolata">Inconsolata</string>
+    <string name="font_serif">Serif</string>
+    <string name="text_size">Boyut</string>
+    <string name="bold">Kalın</string>
+    <string name="text_color">Renk</string>
+    <string name="color_white">Beyaz</string>
+    <string name="color_yellow">Sarı</string>
+    <string name="color_cyan">Camgöbeği</string>
+    <string name="color_green">Yeşil</string>
+    <string name="backdrop">Zemin</string>
+    <string name="backdrop_outline">Kontur</string>
+    <string name="backdrop_shadow">Gölge</string>
+    <string name="backdrop_box">Kutu</string>
+    <string name="reset_defaults">Varsayılana dön</string>
+    <string name="preview_line">Bunu sana daha önce de söylemiştim.</string>
+
+    <!-- Player extras -->
+    <string name="prev_cue">Önceki altyazı satırı</string>
+    <string name="next_cue">Sonraki altyazı satırı</string>
+    <string name="audio_track">Ses</string>
+    <string name="audio_n">Ses %1$d</string>
+    <string name="sleep_timer">Uyku zamanlayıcı</string>
+    <string name="sleep_off">Kapalı</string>
+    <string name="sleep_minutes">%1$d dk</string>
+    <string name="sleep_done">Uyku zamanlayıcı bitti, video duraklatıldı.</string>
+    <string name="ab_loop">A–B tekrar</string>
+    <string name="loop_set_a">A noktasını ayarla</string>
+    <string name="loop_set_b">B noktasını ayarla</string>
+    <string name="loop_clear">Tekrarı kapat</string>
+    <string name="loop_a_set">A noktası ayarlandı</string>
+    <string name="loop_on">A ile B arası tekrarlanıyor</string>
+    <string name="loop_off">Tekrar kapandı</string>
+    <string name="loop_b_error">B noktası A noktasından sonra olmalı.</string>
+    <string name="lock_touch">Dokunmatiği kilitle</string>
+    <string name="unlock_touch">Kilidi aç</string>
+    <string name="brightness_pct">Parlaklık %%%1$d</string>
+    <string name="volume_pct">Ses %%%1$d</string>
+
+    <!-- Embedded tracks, gallery, default player -->
+    <string name="embedded_subtitles">Videonun içindeki altyazılar</string>
+    <string name="embedded_off">Kapalı</string>
+    <string name="embedded_n">Altyazı %1$d</string>
+    <string name="pick_gallery">Galeriden seç</string>
+    <string name="pick_files">Dosyalardan seç</string>
+    <string name="section_system">Sistem</string>
+    <string name="default_player">Varsayılan video oynatıcı</string>
+    <string name="default_player_body">Galeriden bir videoya dokununca bu uygulama açılsın. Android\'in varsayılan uygulamalar ekranını açar; video oynatıcı olarak Looplayer\'ı seç.</string>
+    <string name="folder_subtitles">Klasördeki altyazılar</string>
+    <string name="folder_subtitles_body">Videonun yanındaki SRT, VTT ve ASS dosyaları kendiliğinden eklenir. Android\'in \"tüm dosyalara erişim\" iznini ister.</string>
+    <string name="folder_subtitles_on">Açık</string>
+    <string name="grant">İzin ver</string>
+    <string name="open_settings">Aç</string>
+
+    <string name="embedded_to_first">1. dile</string>
+    <string name="embedded_to_second">2. dile</string>
+    <string name="embedded_import_body">Videonun içindeki bir altyazıyı birinci ya da ikinci dil olarak al; çift dokunuşla değişir.</string>
+    <string name="embedded_importing">Altyazı videodan çıkarılıyor…</string>
+    <string name="embedded_imported">Altyazı eklendi</string>
+    <string name="embedded_import_failed">Bu altyazı çıkarılamadı. Resim tabanlı altyazılar desteklenmez.</string>
+
+    <!-- Library: device folders -->
+    <string name="library_continue">Devam et</string>
+    <string name="library_folders">Klasörler</string>
+    <string name="opened_files">Açılan dosyalar</string>
+    <plurals name="video_count">
+        <item quantity="one">%1$d video</item>
+        <item quantity="other">%1$d video</item>
+    </plurals>
+    <string name="time_left">%1$s kaldı</string>
+    <string name="device_access_title">Cihazındaki videolar</string>
+    <string name="device_access_body">Klasörlere göre listelensin; dosya aramadan doğrudan seç.</string>
+    <string name="folder_back">Klasörlere dön</string>
+
+    <!-- Appearance, language, picture in picture -->
+    <string name="section_appearance">Görünüm</string>
+    <string name="dark_theme">Koyu tema</string>
+    <string name="dark_theme_body">Kapalıyken açık renkli tema kullanılır.</string>
+    <string name="language">Dil</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_english">English</string>
+    <string name="picture_in_picture">Küçük pencerede oynat</string>
+
+    <string name="group_text">Yazı</string>
+    <string name="group_switching">Dil geçişi</string>
+    <string name="text_opacity">Yazı saydamlığı</string>
+    <string name="backdrop_opacity">Kutu koyuluğu</string>
+    <string name="subtitle_position">Yükseklik</string>
+    <string name="switch_animation">Geçiş animasyonu</string>
+    <string name="switch_animation_body">Kapalıyken altyazı ve dil işareti kayma olmadan, anında değişir.</string>
+    <string name="subtitle_style_body">Yazı tipi, boyut, renk, konum, saydamlık</string>
+    <string name="hold_speed">Basılı tutma hızı</string>
+    <string name="skip_interval">İleri geri atlama</string>
+    <string name="controls_timeout">Kontroller ne kadar görünsün</string>
+    <string name="orientation">Ekran yönü</string>
+    <string name="orientation_video">Videoya uysun</string>
+    <string name="orientation_sensor">Telefonu izlesin</string>
+    <string name="speed_x">%1$s×</string>
+    <string name="seconds_short">%1$d sn</string>
+    <string name="boost_speed">%1$s× hız</string>
+    <string name="hold_boost">Basılı tutunca hızlan</string>
+    <string name="hold_boost_body">Ekrana bastığın sürece video hızlı oynar.</string>
 </resources>

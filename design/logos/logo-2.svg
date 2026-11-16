@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <rect width="108" height="108" fill="#000000" />
+  <!-- Broken loop ring around the centre -->
+  <path d="M 32 46 A 23.4 23.4 0 0 1 76 46" fill="none" stroke="#444444" stroke-width="4.5" stroke-linecap="round" />
+  <path d="M 76 62 A 23.4 23.4 0 0 1 32 62" fill="none" stroke="#444444" stroke-width="4.5" stroke-linecap="round" />
+  <!-- Primary active subtitle line -->
+  <rect x="33" y="45" width="32" height="7" rx="3.5" fill="#FFFFFF" />
+  <circle cx="71.5" cy="48.5" r="3.5" fill="#3EA6FF" />
+  <!-- Secondary alternate subtitle line (shifted / toggled) -->
+  <circle cx="36.5" cy="59.5" r="3.5" fill="#FFFFFF" />
+  <rect x="43" y="56" width="32" height="7" rx="3.5" fill="#3EA6FF" />
+</svg>

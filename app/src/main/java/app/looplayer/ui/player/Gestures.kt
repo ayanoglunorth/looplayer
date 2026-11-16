@@ -18,6 +18,13 @@ class PlayerGestureHandler(
     val onSeek: (dragPx: Float, widthPx: Float) -> Unit,
     val onSeekEnd: () -> Unit,
     val onSeekCancel: () -> Unit,
+    /** Press-and-hold: starts after the long-press delay, ends on release. */
+    val onHoldStart: () -> Unit = {},
+    val onHoldEnd: () -> Unit = {},
+    /** Vertical slide: start with the touch x as a 0..1 fraction of the width, then the total travel and surface height in px. */
+    val onAdjustStart: (xFraction: Float) -> Unit = {},
+    val onAdjust: (dragPx: Float, heightPx: Float) -> Unit = { _, _ -> },
+    val onAdjustEnd: () -> Unit = {},
 )
 
 /**
@@ -29,7 +36,17 @@ fun Modifier.playerGestures(handler: PlayerGestureHandler): Modifier {
     val h by rememberUpdatedState(handler)
     return this
         .pointerInput(Unit) {
-            detectTapGestures(onTap = { h.onTap() }, onDoubleTap = { h.onDoubleTap() })
+            var holding = false
+            detectTapGestures(
+                onPress = {
+                    holding = false
+                    tryAwaitRelease()
+                    if (holding) { holding = false; h.onHoldEnd() }
+                },
+                onLongPress = { holding = true; h.onHoldStart() },
+                onTap = { h.onTap() },
+                onDoubleTap = { h.onDoubleTap() },
+            )
         }
         .pointerInput(Unit) {
             var drag = 0f
@@ -44,8 +61,18 @@ fun Modifier.playerGestures(handler: PlayerGestureHandler): Modifier {
                 onDragCancel = { h.onSeekCancel() },
             )
         }
-        // Vertical swipes do nothing yet, but they must not end as a tap that toggles the controls.
+        // Vertical slides adjust brightness (left) or volume (right); they must not end as a tap either way.
         .pointerInput(Unit) {
-            detectVerticalDragGestures { change, _ -> change.consume() }
+            var drag = 0f
+            detectVerticalDragGestures(
+                onDragStart = { at -> drag = 0f; h.onAdjustStart(at.x / size.width) },
+                onVerticalDrag = { change, dy ->
+                    change.consume()
+                    drag += dy
+                    h.onAdjust(drag, size.height.toFloat())
+                },
+                onDragEnd = { h.onAdjustEnd() },
+                onDragCancel = { h.onAdjustEnd() },
+            )
         }
 }

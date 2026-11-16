@@ -42,6 +42,20 @@ data class SubtitleTrack(
         LongArray(sorted.size) { i -> max = maxOf(max, sorted[i].endMs); max }
     }
 
+    /**
+     * Start of the line to replay: the line now showing, or the one before it when playback is
+     * within [graceMs] of that line's start. Null when no earlier line exists.
+     */
+    fun previousCueStart(positionMs: Long, graceMs: Long = 1_000): Long? {
+        val limit = positionMs - graceMs - offsetMs
+        val i = sorted.indexOfLast { it.startMs < limit }
+        return sorted.getOrNull(i)?.let { (it.startMs + offsetMs).coerceAtLeast(0) }
+    }
+
+    /** Start of the first line that begins after [positionMs], or null at the end. */
+    fun nextCueStart(positionMs: Long): Long? =
+        sorted.firstOrNull { it.startMs + offsetMs > positionMs }?.let { it.startMs + offsetMs }
+
     /** Text of every cue showing at [positionMs], or null when nothing is on screen. */
     fun textAt(positionMs: Long): String? {
         val t = positionMs - offsetMs

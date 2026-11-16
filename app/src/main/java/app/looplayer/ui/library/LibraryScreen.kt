@@ -1,7 +1,14 @@
 package app.looplayer.ui.library
 
 import android.graphics.Bitmap
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.runtime.saveable.rememberSaveable
+import app.looplayer.data.DeviceFolder
+import app.looplayer.data.DeviceVideo
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,10 +30,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +58,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,7 +71,10 @@ import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.TimeFormat
 import app.looplayer.ui.components.SlotMark
 import app.looplayer.ui.theme.Palette
+import app.looplayer.ui.theme.Ic
 import app.looplayer.ui.theme.TabularNumbers
+
+private const val OPENED_FOLDER = -1L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,15 +84,47 @@ fun LibraryScreen(
     onOpenVideo: () -> Unit,
     onSelect: (VideoEntry) -> Unit,
     onRemove: (VideoEntry) -> Unit,
+    onOpenSettings: () -> Unit = {},
+    folders: List<DeviceFolder> = emptyList(),
+    hasAccess: Boolean = true,
+    onRequestAccess: () -> Unit = {},
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    var openFolder by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    val stored = entries.associateBy { it.uri }
+    val onDevice = folders.flatMapTo(HashSet()) { f -> f.videos.map { it.uri } }
+    // Files opened from elsewhere (the picker, a download, "Open with") aren't in the media index.
+    val opened = entries.filter { it.uri !in onDevice }
+    val openedName = stringResource(R.string.opened_files)
+    val shelf = buildList {
+        if (opened.isNotEmpty()) add(DeviceFolder(OPENED_FOLDER, openedName, opened.map { DeviceVideo(it.uri, it.title, it.durationMs, 0, 0) }))
+        addAll(folders)
+    }
+    val folder = shelf.firstOrNull { it.id == openFolder }
+    BackHandler(enabled = folder != null) { openFolder = null }
+
+    val continuing = entries.filter { it.resumeMs > 0 && (it.progress ?: 0f) < 0.97f }.take(12)
+
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             // Same 720dp column as the list, so heading and rows share one left edge on tablets.
             Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.TopCenter) {
                 LargeTopAppBar(
-                    title = { Text(stringResource(R.string.library_title)) },
+                    title = { Text(folder?.name ?: stringResource(R.string.library_title), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    navigationIcon = {
+                        if (folder != null) {
+                            IconButton(onClick = { openFolder = null }) {
+                                Icon(painterResource(Ic.Back), contentDescription = stringResource(R.string.folder_back))
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(painterResource(Ic.Settings), contentDescription = stringResource(R.string.settings))
+                        }
+                    },
                     scrollBehavior = scroll,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
@@ -97,7 +137,7 @@ fun LibraryScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onOpenVideo,
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                icon = { Icon(painterResource(Ic.Add), contentDescription = null) },
                 text = { Text(stringResource(R.string.open_video)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -107,19 +147,35 @@ fun LibraryScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        if (entries.isEmpty()) {
-            EmptyLibrary(Modifier.padding(padding))
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    top = padding.calculateTopPadding(),
-                    bottom = padding.calculateBottomPadding() + 96.dp,
-                ),
-                modifier = Modifier.fillMaxSize().wrapContentWidth().widthIn(max = ContentMaxWidth),
-            ) {
-                items(entries, key = { it.uri }) { entry ->
-                    VideoRow(entry, onClick = { onSelect(entry) }, onRemove = { onRemove(entry) }, modifier = Modifier.animateItem())
+        LazyColumn(
+            contentPadding = PaddingValues(
+                top = padding.calculateTopPadding(),
+                bottom = padding.calculateBottomPadding() + 96.dp,
+            ),
+            modifier = Modifier.fillMaxSize().wrapContentWidth().widthIn(max = ContentMaxWidth),
+        ) {
+            if (folder != null) {
+                items(folder.videos, key = { it.uri }) { video ->
+                    val entry = stored[video.uri] ?: VideoEntry(video.uri, video.title, video.durationMs)
+                    VideoRow(
+                        entry, onClick = { onSelect(entry) },
+                        onRemove = if (video.uri in stored) ({ onRemove(entry) }) else null,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
+            } else {
+                if (!hasAccess) item(key = "access") { AccessCard(onRequestAccess) }
+                if (continuing.isNotEmpty()) {
+                    item(key = "continue-head") { SectionLabel(R.string.library_continue) }
+                    item(key = "continue") {
+                        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(continuing, key = { it.uri }) { entry -> ContinueCard(entry) { onSelect(entry) } }
+                        }
+                    }
+                }
+                if (shelf.isNotEmpty()) item(key = "folders-head") { SectionLabel(R.string.library_folders) }
+                items(shelf, key = { "f${it.id}" }) { f -> FolderRow(f) { openFolder = f.id } }
+                if (shelf.isEmpty()) item(key = "empty") { EmptyLibrary() }
             }
         }
     }
@@ -129,13 +185,80 @@ private val ThumbWidth = 128.dp
 private val ContentMaxWidth = 720.dp
 
 @Composable
-private fun VideoRow(entry: VideoEntry, onClick: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+private fun SectionLabel(res: Int) = Text(
+    stringResource(res),
+    style = MaterialTheme.typography.labelLarge,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 10.dp),
+)
+
+/** Asks once for permission to list the device's videos; without it the library still works from the file picker. */
+@Composable
+private fun AccessCard(onGrant: () -> Unit) {
+    Row(
+        Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(stringResource(R.string.device_access_title), style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.device_access_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Button(onClick = onGrant, shape = RoundedCornerShape(50)) { Text(stringResource(R.string.grant)) }
+    }
+}
+
+@Composable
+private fun ContinueCard(entry: VideoEntry, onClick: () -> Unit) {
+    Column(Modifier.width(196.dp).clip(MaterialTheme.shapes.small).clickable(onClick = onClick), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Thumbnail(entry, Modifier.fillMaxWidth())
+        Column(Modifier.padding(horizontal = 2.dp)) {
+            Text(entry.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (entry.durationMs > 0) {
+                Text(
+                    stringResource(R.string.time_left, TimeFormat.format(entry.durationMs - entry.positionMs)),
+                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularNumbers),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FolderRow(folder: DeviceFolder, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(48.dp).clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) { Icon(painterResource(Ic.Folder), contentDescription = null) }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(folder.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                pluralStringResource(R.plurals.video_count, folder.videos.size, folder.videos.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun VideoRow(entry: VideoEntry, onClick: () -> Unit, onRemove: (() -> Unit)?, modifier: Modifier = Modifier) {
     var menu by remember { mutableStateOf(false) }
     Row(
         modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 4.dp),
+            .padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = if (onRemove != null) 4.dp else 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Thumbnail(entry, Modifier.width(ThumbWidth))
@@ -159,15 +282,17 @@ private fun VideoRow(entry: VideoEntry, onClick: () -> Unit, onRemove: () -> Uni
                 }
             }
         }
-        Box {
-            IconButton(onClick = { menu = true }) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.remove_from_library))
-            }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.remove_from_library)) },
-                    onClick = { menu = false; onRemove() },
-                )
+        if (onRemove != null) {
+            Box {
+                IconButton(onClick = { menu = true }) {
+                    Icon(painterResource(Ic.More), contentDescription = stringResource(R.string.remove_from_library))
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.remove_from_library)) },
+                        onClick = { menu = false; onRemove() },
+                    )
+                }
             }
         }
     }
@@ -202,7 +327,7 @@ fun Thumbnail(entry: VideoEntry, modifier: Modifier = Modifier) {
         if (b != null) {
             Image(b.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
-            Icon(Icons.Rounded.Movie, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+            Icon(painterResource(Ic.Movie), contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
         val p = entry.progress
         if (p != null && entry.positionMs >= 5_000) {
@@ -215,7 +340,7 @@ fun Thumbnail(entry: VideoEntry, modifier: Modifier = Modifier) {
 
 @Composable
 private fun EmptyLibrary(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize().padding(horizontal = 32.dp), contentAlignment = Alignment.Center) {
+    Box(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 48.dp)) {
         Column(horizontalAlignment = Alignment.Start, modifier = Modifier.widthIn(max = 420.dp).animateContentSize()) {
             Text(stringResource(R.string.empty_title), style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(10.dp))
@@ -224,7 +349,6 @@ private fun EmptyLibrary(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(96.dp))
         }
     }
 }

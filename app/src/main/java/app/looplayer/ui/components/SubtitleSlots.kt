@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +33,7 @@ import app.looplayer.data.tabMark
 import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.SubtitleTrack
 import app.looplayer.ui.theme.Palette
+import app.looplayer.ui.theme.Ic
 import app.looplayer.ui.theme.TabularNumbers
 import java.text.NumberFormat
 import java.util.Locale
@@ -116,14 +114,14 @@ private fun SlotRow(
                         contentColor = Palette.Text,
                     ),
                 ) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(painterResource(Ic.Add), contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.add))
                 }
                 else -> {
                     TextButton(onClick = { onPick(slot) }) { Text(stringResource(R.string.replace)) }
                     IconButton(onClick = { onRemove(slot) }) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.remove))
+                        Icon(painterResource(Ic.Close), contentDescription = stringResource(R.string.remove))
                     }
                 }
             }
@@ -149,10 +147,10 @@ private fun SlotRow(
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = { onOffset(slot, -250) }) {
-                    Icon(Icons.Rounded.Remove, contentDescription = stringResource(R.string.earlier))
+                    Icon(painterResource(Ic.Remove), contentDescription = stringResource(R.string.earlier))
                 }
                 IconButton(onClick = { onOffset(slot, 250) }) {
-                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.later))
+                    Icon(painterResource(Ic.Add), contentDescription = stringResource(R.string.later))
                 }
             }
         }

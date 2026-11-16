@@ -109,7 +109,15 @@ class LibraryStore(context: Context) {
         offsetMs = optLong("offset"),
     )
 
-    private companion object { const val KEY = "entries" }
+    companion object {
+        private const val KEY = "entries"
+
+        @Volatile private var instance: LibraryStore? = null
+
+        /** One shared instance, so downloads that finish in the background show up in the open library. */
+        fun get(context: Context): LibraryStore =
+            instance ?: synchronized(this) { instance ?: LibraryStore(context.applicationContext).also { instance = it } }
+    }
 }
 
 /** File access through the Storage Access Framework: names, persisted grants, subtitle reading. */
@@ -156,7 +164,7 @@ object Files {
     fun canRead(resolver: ContentResolver, uri: String): Boolean =
         runCatching { resolver.openFileDescriptor(Uri.parse(uri), "r")?.use { true } ?: false }.getOrDefault(false)
 
-    private val thumbs = LruCache<String, Bitmap>(24)
+    private val thumbs = LruCache<String, Bitmap>(64)
 
     suspend fun thumbnail(context: Context, uri: String, atMs: Long): Bitmap? = withContext(Dispatchers.IO) {
         thumbs.get(uri)?.let { return@withContext it }

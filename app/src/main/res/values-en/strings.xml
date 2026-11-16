@@ -45,4 +45,116 @@
     <string name="unlock_rotation">Unlock rotation</string>
     <string name="playback_error_body">The file may have moved, or it uses a format this device can\'t play.</string>
     <string name="choose_another">Choose another video</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="more_options">More options</string>
+    <string name="section_player">Player</string>
+    <string name="language_indicator">Language indicator</string>
+    <string name="language_indicator_body">A short marker appears on the right edge when the language changes.</string>
+    <string name="swipe_adjust">Swipe for brightness and volume</string>
+    <string name="swipe_adjust_body">Slide up or down on the left: brightness. On the right: volume.</string>
+    <string name="section_subtitle_style">Subtitle style</string>
+    <string name="font">Font</string>
+    <string name="font_inter">Inter</string>
+    <string name="font_serif">Serif</string>
+    <string name="text_size">Size</string>
+    <string name="bold">Bold</string>
+    <string name="text_color">Color</string>
+    <string name="color_white">White</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_green">Green</string>
+    <string name="backdrop">Background</string>
+    <string name="backdrop_outline">Outline</string>
+    <string name="backdrop_shadow">Shadow</string>
+    <string name="backdrop_box">Box</string>
+    <string name="reset_defaults">Reset to defaults</string>
+    <string name="preview_line">I told you this before.</string>
+
+    <!-- Player extras -->
+    <string name="prev_cue">Previous subtitle line</string>
+    <string name="next_cue">Next subtitle line</string>
+    <string name="audio_track">Audio</string>
+    <string name="audio_n">Audio %1$d</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_off">Off</string>
+    <string name="sleep_minutes">%1$d min</string>
+    <string name="sleep_done">Sleep timer ended. Video paused.</string>
+    <string name="ab_loop">A–B repeat</string>
+    <string name="loop_set_a">Set point A</string>
+    <string name="loop_set_b">Set point B</string>
+    <string name="loop_clear">Turn off repeat</string>
+    <string name="loop_a_set">Point A set</string>
+    <string name="loop_on">Repeating A to B</string>
+    <string name="loop_off">Repeat off</string>
+    <string name="loop_b_error">Point B must come after point A.</string>
+    <string name="lock_touch">Lock touch</string>
+    <string name="unlock_touch">Unlock</string>
+    <string name="brightness_pct">Brightness %1$d%%</string>
+    <string name="volume_pct">Volume %1$d%%</string>
+
+    <!-- Embedded tracks, gallery, default player -->
+    <string name="embedded_subtitles">Subtitles inside the video</string>
+    <string name="embedded_off">Off</string>
+    <string name="embedded_n">Subtitle %1$d</string>
+    <string name="pick_gallery">Choose from gallery</string>
+    <string name="pick_files">Choose from files</string>
+    <string name="section_system">System</string>
+    <string name="default_player">Default video player</string>
+    <string name="default_player_body">Open this app when you tap a video in the gallery. Opens Android\'s default apps screen; pick Looplayer as the video player.</string>
+    <string name="folder_subtitles">Subtitles in the folder</string>
+    <string name="folder_subtitles_body">SRT, VTT and ASS files next to the video are added automatically. Asks for Android\'s \"all files access\" permission.</string>
+    <string name="folder_subtitles_on">On</string>
+    <string name="grant">Allow</string>
+    <string name="open_settings">Open</string>
+
+    <string name="embedded_to_first">To 1st</string>
+    <string name="embedded_to_second">To 2nd</string>
+    <string name="embedded_import_body">Take a subtitle from inside the video as the first or second language; double-tap switches between them.</string>
+    <string name="embedded_importing">Extracting subtitle from the video…</string>
+    <string name="embedded_imported">Subtitle added</string>
+    <string name="embedded_import_failed">Could not extract this subtitle. Picture-based subtitles are not supported.</string>
+
+    <!-- Library: device folders -->
+    <string name="library_continue">Continue watching</string>
+    <string name="library_folders">Folders</string>
+    <string name="opened_files">Opened files</string>
+    <plurals name="video_count">
+        <item quantity="one">%1$d video</item>
+        <item quantity="other">%1$d videos</item>
+    </plurals>
+    <string name="time_left">%1$s left</string>
+    <string name="device_access_title">Videos on this device</string>
+    <string name="device_access_body">Browse them folder by folder and play straight from the list.</string>
+    <string name="folder_back">Back to folders</string>
+
+    <!-- Appearance, language, picture in picture -->
+    <string name="section_appearance">Appearance</string>
+    <string name="dark_theme">Dark theme</string>
+    <string name="dark_theme_body">Off uses the light theme.</string>
+    <string name="language">Language</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_english">English</string>
+    <string name="picture_in_picture">Play in a small window</string>
+
+    <string name="group_text">Text</string>
+    <string name="group_switching">Language switch</string>
+    <string name="text_opacity">Text opacity</string>
+    <string name="backdrop_opacity">Box darkness</string>
+    <string name="subtitle_position">Height</string>
+    <string name="switch_animation">Switch animation</string>
+    <string name="switch_animation_body">Off: the subtitle and the language mark change instantly, with no slide.</string>
+    <string name="subtitle_style_body">Font, size, colour, position, opacity</string>
+    <string name="hold_speed">Press-and-hold speed</string>
+    <string name="skip_interval">Skip step</string>
+    <string name="controls_timeout">Controls stay visible</string>
+    <string name="orientation">Screen orientation</string>
+    <string name="orientation_video">Match the video</string>
+    <string name="orientation_sensor">Follow the phone</string>
+    <string name="speed_x">%1$s×</string>
+    <string name="seconds_short">%1$d s</string>
+    <string name="boost_speed">%1$s× speed</string>
+    <string name="hold_boost">Press and hold to speed up</string>
+    <string name="hold_boost_body">The video plays faster while you hold the screen.</string>
 </resources>

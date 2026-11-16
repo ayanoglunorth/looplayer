@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import app.looplayer.subtitle.DualSubtitles
 import app.looplayer.subtitle.Slot
 import app.looplayer.subtitle.SubtitleTrack
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 enum class AttachResult { OK, EMPTY, FAILED }
 
@@ -21,6 +23,8 @@ class SubtitleSession(
     initial: VideoEntry,
     /** False for videos we can't reopen later (temporary grants): nothing is written to the library. */
     private val persist: Boolean = true,
+    /** Subtitle files found beside the video; only consulted when the entry has none of its own. */
+    private val discover: () -> List<Uri> = { emptyList() },
 ) {
     var entry by mutableStateOf(initial)
         private set
@@ -39,6 +43,10 @@ class SubtitleSession(
             val ref = entry.sub(slot) ?: continue
             if (tracks[slot] != null) continue
             if (load(slot, ref) != AttachResult.OK) update(entry.withSub(slot, null))
+        }
+        if (entry.subA == null && entry.subB == null) {
+            val found = withContext(Dispatchers.IO) { discover() }
+            Slot.entries.zip(found).forEach { (slot, uri) -> attach(slot, uri) }
         }
         normalizeActive()
     }
